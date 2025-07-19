@@ -29,8 +29,11 @@ export async function POST(req: NextRequest) {
 
   // Defensive check for a valid transaction object
   if (!transaction || typeof transaction.status === 'undefined') {
-    console.error('Invalid transaction response from Worldcoin API:', transaction);
-    return NextResponse.json({ success: false });
+    console.error(
+      'Invalid transaction response from Worldcoin API. This might be due to an incorrect APP_ID or DEV_PORTAL_API_KEY. Please check your environment variables.',
+      transaction
+    );
+    return NextResponse.json({ success: false, status: 'failed' });
   }
 
   const isToAddressMatch =
