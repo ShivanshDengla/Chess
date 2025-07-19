@@ -24,6 +24,7 @@ export function ChessPuzzle() {
   const [allPuzzlesSolved, setAllPuzzlesSolved] = useState(false);
   const [moveFrom, setMoveFrom] = useState('');
   const [optionSquares, setOptionSquares] = useState({});
+  const [isPaying, setIsPaying] = useState(false);
 
   useEffect(() => {
     MiniKit.install();
@@ -104,6 +105,7 @@ export function ChessPuzzle() {
       setOptionSquares({});
     }
 
+    // if no piece is selected, select one
     if (!moveFrom) {
       const moves = game.moves({ square, verbose: true });
       if (moves.length > 0) {
@@ -120,30 +122,31 @@ export function ChessPuzzle() {
       return;
     }
 
+    // if a piece is selected, and we click it again, deselect it
     if (square === moveFrom) {
       resetMoveState();
       return;
     }
 
-    const moveSuccessful = handleMove(moveFrom as Square, square);
-    if (moveSuccessful) {
-      resetMoveState();
-    } else {
+    // if we click another one of our own pieces, switch to that piece
+    const piece = game.get(square);
+    if (piece && piece.color === game.turn()) {
       const moves = game.moves({ square, verbose: true });
-      if (moves.length > 0) {
-        setMoveFrom(square);
-        const newOptions: { [key: string]: React.CSSProperties } = {};
-        moves.forEach((move) => {
-          newOptions[move.to] = {
-            background: 'radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)',
-            borderRadius: '50%',
-          };
-        });
-        setOptionSquares(newOptions);
-      } else {
-        resetMoveState();
-      }
+      setMoveFrom(square);
+      const newOptions: { [key: string]: React.CSSProperties } = {};
+      moves.forEach((move) => {
+        newOptions[move.to] = {
+          background: 'radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)',
+          borderRadius: '50%',
+        };
+      });
+      setOptionSquares(newOptions);
+      return;
     }
+
+    // otherwise, it's a move
+    handleMove(moveFrom as Square, square);
+    resetMoveState();
   };
 
   const handleCorrectMove = async () => {
@@ -168,45 +171,54 @@ export function ChessPuzzle() {
       setMessage(currentPuzzle.first);
       setIsSolved(false);
       setIsLost(false);
+      setMoveFrom('');
+      setOptionSquares({});
     }
   };
 
   const handleKeepGoing = async () => {
-    // Logic to pay and retry the same puzzle (level remains unchanged)
-    const res = await fetch('/api/initiate-payment', {
-      method: 'POST',
-    });
-    const { id } = await res.json();
+    if (isPaying) return;
 
-    const payload: PayCommandInput = {
-      reference: id,
-      to: '0xe303fffe0221d8f0c6897fec88f8524f7e719fc1',
-      tokens: [
-        {
-          symbol: Tokens.WLD,
-          token_amount: tokenToDecimals(0.01, Tokens.WLD).toString(),
-        },
-      ],
-      description: 'Payment to restart the puzzle',
-    };
-
-    if (!MiniKit.isInstalled()) {
-      return;
-    }
-
-    const { finalPayload } = await MiniKit.commandsAsync.pay(payload);
-
-    if (finalPayload.status == 'success') {
-      const res = await fetch(`/api/confirm-payment`, {
+    try {
+      setIsPaying(true);
+      // Logic to pay and retry the same puzzle (level remains unchanged)
+      const res = await fetch('/api/initiate-payment', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(finalPayload),
       });
-      const payment = await res.json();
-      if (payment.success) {
-        // Stay on the same level, just reset the board
-        retryPuzzle();
+      const { id } = await res.json();
+
+      const payload: PayCommandInput = {
+        reference: id,
+        to: '0xe303fffe0221d8f0c6897fec88f8524f7e719fc1',
+        tokens: [
+          {
+            symbol: Tokens.WLD,
+            token_amount: tokenToDecimals(0.01, Tokens.WLD).toString(),
+          },
+        ],
+        description: 'Payment to restart the puzzle',
+      };
+
+      if (!MiniKit.isInstalled()) {
+        return;
       }
+
+      const { finalPayload } = await MiniKit.commandsAsync.pay(payload);
+
+      if (finalPayload.status == 'success') {
+        const confirmRes = await fetch(`/api/confirm-payment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(finalPayload),
+        });
+        const payment = await confirmRes.json();
+        if (payment.success) {
+          // Stay on the same level, just reset the board
+          retryPuzzle();
+        }
+      }
+    } finally {
+      setIsPaying(false);
     }
   };
 
@@ -249,28 +261,21 @@ export function ChessPuzzle() {
       <p className={`text-lg font-semibold ${isSolved ? 'text-green-500' : 'text-red-500'}`}>
         {message}
       </p>
-      {isLost ? (
+      {isLost && (
         <div className="flex gap-4">
           <button
             onClick={handleKeepGoing}
-            className="px-4 py-2 font-semibold text-white bg-green-500 rounded-md hover:bg-green-600"
+            disabled={isPaying}
+            className="px-4 py-2 font-semibold text-white bg-green-500 rounded-md hover:bg-green-600 disabled:bg-gray-400"
           >
-            Keep Going (0.01 WLD)
+            {isPaying ? 'Processing...' : 'Keep Going (0.01 WLD)'}
           </button>
           <button
             onClick={handleRestart}
-            className="px-4 py-2 font-semibold text-white bg-gray-500 rounded-md hover:bg-gray-600"
+            disabled={isPaying}
+            className="px-4 py-2 font-semibold text-white bg-gray-500 rounded-md hover:bg-gray-600 disabled:bg-gray-400"
           >
             Restart
-          </button>
-        </div>
-      ) : (
-        <div className="flex gap-4">
-          <button
-            onClick={retryPuzzle}
-            className="px-4 py-2 font-semibold text-white bg-gray-500 rounded-md hover:bg-gray-600"
-          >
-            Reset
           </button>
         </div>
       )}
