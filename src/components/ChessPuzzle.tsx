@@ -186,14 +186,19 @@ export function ChessPuzzle() {
 
   const handleKeepGoing = async () => {
     if (isPaying) return;
+    console.log('--- Step 1: `handleKeepGoing` initiated ---');
 
     try {
       setIsPaying(true);
-      // Logic to pay and retry the same puzzle (level remains unchanged)
+      setMessage('Initiating payment...');
+      console.log(
+        '--- Step 2: Fetching payment reference from /api/initiate-payment ---'
+      );
       const res = await fetch('/api/initiate-payment', {
         method: 'POST',
       });
       const { id } = await res.json();
+      console.log('--- Step 3: Received reference ID:', id, '---');
 
       const payload: PayCommandInput = {
         reference: id,
@@ -206,73 +211,124 @@ export function ChessPuzzle() {
         ],
         description: 'Payment to restart the puzzle',
       };
+      console.log(
+        '--- Step 4: Constructed payment payload for MiniKit ---',
+        payload
+      );
 
       if (!MiniKit.isInstalled()) {
         setMessage('MiniKit not installed. Please reload.');
+        console.error('--- MiniKit not installed ---');
         return;
       }
 
+      console.log('--- Step 5: Calling MiniKit.commandsAsync.pay ---');
       const { finalPayload } = await MiniKit.commandsAsync.pay(payload);
+      console.log(
+        '--- Step 6: Received finalPayload from MiniKit ---',
+        finalPayload
+      );
 
       if (finalPayload.status == 'success') {
         setMessage('Processing payment...');
+        console.log(
+          '--- Step 7: Payment submitted successfully. Starting polling for confirmation. ---'
+        );
         await pollForPaymentConfirmation(
           payload.to,
           finalPayload as MiniAppPaymentSuccessPayload
         );
       } else {
         setMessage('Payment was not completed. Please retry.');
+        console.error(
+          '--- Step 7: Payment failed or was cancelled in World App. ---',
+          finalPayload
+        );
       }
     } catch (error) {
-      console.error('An error occurred during payment:', error);
+      console.error('--- An error occurred during handleKeepGoing ---', error);
       setMessage('An unexpected error occurred. Please try again.');
     } finally {
+      console.log(
+        '--- Final Step: `handleKeepGoing` finished. Resetting `isPaying`. ---'
+      );
       setIsPaying(false);
     }
   };
 
-  const pollForPaymentConfirmation = async (
+  const pollForPaymentConfirmation = (
     to: string,
     payload: MiniAppPaymentSuccessPayload,
     retries = 10 // e.g., 10 retries, 2 seconds apart for a total of 20 seconds
-  ) => {
-    if (retries === 0) {
-      setMessage('Payment confirmation timed out. Please try again.');
-      setIsPaying(false);
-      return;
-    }
+  ): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const poll = async (retriesLeft: number) => {
+        console.log(
+          `--- Polling attempt #${
+            11 - retriesLeft
+          }/10 for transaction ${payload.transaction_id} ---`
+        );
 
-    try {
-      const confirmRes = await fetch(`/api/confirm-payment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to, payload }),
-      });
+        if (retriesLeft === 0) {
+          setMessage('Payment confirmation timed out. Please try again.');
+          console.error('--- Polling failed: Maximum retries reached. ---');
+          return resolve();
+        }
 
-      if (!confirmRes.ok) {
-        throw new Error('Payment confirmation request failed');
-      }
+        try {
+          const confirmRes = await fetch(`/api/confirm-payment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to, payload }),
+          });
+          console.log(
+            '--- Polling: Sent request to /api/confirm-payment ---'
+          );
 
-      const payment = await confirmRes.json();
+          if (!confirmRes.ok) {
+            console.error(
+              '--- Polling: /api/confirm-payment request failed ---',
+              confirmRes
+            );
+            throw new Error('Payment confirmation request failed');
+          }
 
-      if (payment.status === 'mined') {
-        setMessage('Payment successful! The puzzle has been reset.');
-        retryPuzzle(); // Reset the puzzle on successful payment
-      } else if (payment.status === 'pending') {
-        setTimeout(
-          () => pollForPaymentConfirmation(to, payload, retries - 1),
-          2000
-        ); // Wait 2 seconds before retrying
-      } else {
-        // Handle failed or cancelled status
-        setMessage('Payment confirmation failed. Please retry.');
-        setIsPaying(false); // Stop paying animation on failure
-      }
-    } catch (error) {
-      console.error('An error occurred during payment confirmation:', error);
-      setMessage('An unexpected error occurred during confirmation.');
-      setIsPaying(false); // Stop paying animation on error
-    }
+          const payment = await confirmRes.json();
+          console.log(
+            '--- Polling: Received response from /api/confirm-payment ---',
+            payment
+          );
+
+          if (payment.status === 'mined') {
+            setMessage('Payment successful! The puzzle has been reset.');
+            console.log('--- Polling SUCCESS: Transaction mined! ---');
+            retryPuzzle();
+            return resolve();
+          } else if (payment.status === 'pending') {
+            console.log(
+              '--- Polling: Transaction is pending. Retrying in 2 seconds... ---'
+            );
+            setTimeout(() => poll(retriesLeft - 1), 2000);
+          } else {
+            setMessage('Payment confirmation failed. Please retry.');
+            console.error(
+              '--- Polling FAILED: Transaction status is',
+              payment.status,
+              '---'
+            );
+            return resolve();
+          }
+        } catch (error) {
+          console.error(
+            '--- An error occurred during pollForPaymentConfirmation ---',
+            error
+          );
+          setMessage('An unexpected error occurred during confirmation.');
+          return reject(error);
+        }
+      };
+      poll(retries);
+    });
   };
 
   const handleRestart = async () => {
