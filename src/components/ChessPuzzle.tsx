@@ -5,13 +5,26 @@ import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import type { Square, Piece } from 'react-chessboard/dist/chessboard/types';
 import puzzles from '@/../public/Chess_Puzzles/puzzles.json';
+import { useSession } from 'next-auth/react';
+import { getUserPuzzleIndex, setUserPuzzleIndex } from '@/lib/kv';
 
 export function ChessPuzzle() {
+  const { data: session } = useSession();
   const [currentPuzzleIndex, setCurrentPuzzleIndex] = useState(0);
   const [game, setGame] = useState(new Chess());
   const [fen, setFen] = useState('');
   const [message, setMessage] = useState('');
   const [isSolved, setIsSolved] = useState(false);
+
+  useEffect(() => {
+    const fetchUserProgress = async () => {
+      if (session?.user?.walletAddress) {
+        const userPuzzleIndex = await getUserPuzzleIndex(session.user.walletAddress);
+        setCurrentPuzzleIndex(userPuzzleIndex);
+      }
+    };
+    fetchUserProgress();
+  }, [session]);
 
   useEffect(() => {
     loadPuzzle(currentPuzzleIndex);
@@ -26,8 +39,8 @@ export function ChessPuzzle() {
     setIsSolved(false);
   };
 
-  const onDrop = (sourceSquare: Square, targetSquare: Square, piece: Piece): boolean => {
-    if (isSolved) return false; // Don't allow moves after puzzle is solved
+  const onDrop = (sourceSquare: Square, targetSquare: Square, _piece: Piece): boolean => {
+    if (isSolved) return false;
 
     const puzzle = puzzles.problems[currentPuzzleIndex];
     const solution = puzzle.moves.split(';')[0].split('-');
@@ -43,17 +56,20 @@ export function ChessPuzzle() {
         setMessage('Correct! Well done.');
         setIsSolved(true);
 
-        // Optional: automatically play opponent's move for multi-move puzzles
+        const newPuzzleIndex = (currentPuzzleIndex + 1) % puzzles.problems.length;
+        if (session?.user?.walletAddress) {
+          setUserPuzzleIndex(session.user.walletAddress, newPuzzleIndex);
+        }
+
         if (solution.length > 2) {
           setTimeout(() => {
             const opponentMove = { from: solution[2], to: solution[3] };
             gameCopy.move(opponentMove);
             setFen(gameCopy.fen());
             setMessage('Opponent moved. What is your next move?');
-            setIsSolved(false); // Allow next move
+            setIsSolved(false);
           }, 1000);
         } else {
-          // Single-move puzzle solved, move to next puzzle after a delay
           setTimeout(() => {
             handleNextPuzzle();
           }, 1500);
@@ -63,19 +79,22 @@ export function ChessPuzzle() {
     }
 
     setMessage('Wrong move, try again.');
-    // Don't update the board, move is invalid
     return false;
   };
 
   const handleNextPuzzle = () => {
-    setCurrentPuzzleIndex((prevIndex) => (prevIndex + 1) % puzzles.problems.length);
+    const newPuzzleIndex = (currentPuzzleIndex + 1) % puzzles.problems.length;
+    setCurrentPuzzleIndex(newPuzzleIndex);
+    if (session?.user?.walletAddress) {
+      setUserPuzzleIndex(session.user.walletAddress, newPuzzleIndex);
+    }
   };
 
   const puzzle = puzzles.problems[currentPuzzleIndex];
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <h2 className="text-xl font-semibold">{puzzle.type}</h2>
+      <h2 className="text-xl font-semibold">{puzzle?.type}</h2>
       <div className="w-full max-w-sm">
         <Chessboard position={fen} onPieceDrop={onDrop} />
       </div>

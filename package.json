@@ -13,6 +13,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@vercel/kv": "^3.0.0",
     "@worldcoin/mini-apps-ui-kit-react": "^1.0.2",
     "@worldcoin/minikit-js": "latest",
     "@worldcoin/minikit-react": "latest",
@@ -20,7 +21,7 @@
     "clsx": "^2.1.1",
     "iconoir-react": "^7.11.0",
     "next": "15.2.3",
-    "next-auth": "^5.0.0-beta.25",
+    "next-auth": "^5.0.0-beta.29",
     "react": "^19.0.0",
     "react-chessboard": "^4.7.3",
     "react-dom": "^19.0.0",
