@@ -7,12 +7,7 @@ interface IRequestPayload {
 }
 
 export async function POST(req: NextRequest) {
-  const requestBody = await req.json();
-  console.log(
-    '--- Received request in /api/confirm-payment ---',
-    JSON.stringify(requestBody, null, 2)
-  );
-  const { to, payload } = requestBody as IRequestPayload;
+  const { to, payload } = (await req.json()) as IRequestPayload;
 
   // IMPORTANT: Here we should fetch the reference you created in /initiate-payment to ensure the transaction we are verifying is the same one we initiated
   // In a real app, you would look up the reference from your database
@@ -30,8 +25,6 @@ export async function POST(req: NextRequest) {
 
   const transaction = await response.json();
 
-  console.log('Full transaction response from Worldcoin API:', JSON.stringify(transaction, null, 2));
-
   // Defensive check for a valid transaction object
   if (!transaction || typeof transaction.transactionStatus === 'undefined') {
     console.error(
@@ -45,13 +38,6 @@ export async function POST(req: NextRequest) {
     transaction.recipientAddress &&
     to &&
     transaction.recipientAddress.toLowerCase() === to.toLowerCase();
-
-  console.log('--- Payment Confirmation ---');
-  console.log(`Received Transaction ID: ${payload.transaction_id}`);
-  console.log(`Transaction Status from API: ${transaction.transactionStatus}`);
-  console.log(`Reference Match: ${transaction.reference === payload.reference}`);
-  console.log(`Recipient Match (case-insensitive): ${isToAddressMatch}`);
-  console.log('--------------------------');
 
   if (transaction.reference === payload.reference && isToAddressMatch) {
     if (transaction.transactionStatus === 'mined') {
