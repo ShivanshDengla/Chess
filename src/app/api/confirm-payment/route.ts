@@ -7,7 +7,12 @@ interface IRequestPayload {
 }
 
 export async function POST(req: NextRequest) {
-  const { to, payload } = (await req.json()) as IRequestPayload;
+  const requestBody = await req.json();
+  console.log(
+    '--- Received request in /api/confirm-payment ---',
+    JSON.stringify(requestBody, null, 2)
+  );
+  const { to, payload } = requestBody as IRequestPayload;
 
   // IMPORTANT: Here we should fetch the reference you created in /initiate-payment to ensure the transaction we are verifying is the same one we initiated
   // In a real app, you would look up the reference from your database
