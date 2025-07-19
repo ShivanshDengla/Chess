@@ -46,6 +46,7 @@ export function ChessPuzzle() {
     setIsLost(false);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onDrop = (sourceSquare: Square, targetSquare: Square, _piece: Piece): boolean => {
     if (isSolved || isLost) return false;
 
