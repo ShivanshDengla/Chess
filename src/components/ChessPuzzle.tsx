@@ -22,6 +22,8 @@ export function ChessPuzzle() {
   const [isSolved, setIsSolved] = useState(false);
   const [isLost, setIsLost] = useState(false);
   const [allPuzzlesSolved, setAllPuzzlesSolved] = useState(false);
+  const [moveFrom, setMoveFrom] = useState('');
+  const [optionSquares, setOptionSquares] = useState({});
 
   useEffect(() => {
     MiniKit.install();
@@ -57,33 +59,91 @@ export function ChessPuzzle() {
     loadPuzzleForLevel();
   }, [loadPuzzleForLevel]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const onDrop = (sourceSquare: Square, targetSquare: Square, _piece: Piece): boolean => {
+  const handleMove = (from: Square, to: Square): boolean => {
     if (isSolved || isLost || !currentPuzzle) return false;
 
     const solution = currentPuzzle.moves.split(';')[0].split('-');
-    const from = solution[0];
-    const to = solution[1];
+    const solutionFrom = solution[0];
+    const solutionTo = solution[1];
 
-    if (sourceSquare === from && targetSquare === to) {
-      const gameCopy = new Chess(game.fen());
-      const move = gameCopy.move({ from: sourceSquare, to: targetSquare });
+    const gameCopy = new Chess(game.fen());
+    const move = gameCopy.move({ from, to, promotion: 'q' });
 
-      if (move) {
-        setFen(gameCopy.fen());
-        setMessage('Correct! Well done.');
-        setIsSolved(true);
+    if (move === null) {
+      return false;
+    }
+
+    if (from === solutionFrom && to === solutionTo) {
+      setGame(gameCopy);
+      setFen(gameCopy.fen());
+      setMessage('Correct! Well done.');
+      setIsSolved(true);
+      setTimeout(() => {
         handleCorrectMove();
-        setTimeout(() => {
-          handleNextPuzzle();
-        }, 1500);
-        return true;
-      }
+      }, 1500);
+      return true;
     }
 
     setMessage('Wrong move. You can pay to continue or restart the puzzle.');
     setIsLost(true);
     return false;
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const onDrop = (sourceSquare: Square, targetSquare: Square, _piece: Piece): boolean => {
+    return handleMove(sourceSquare, targetSquare);
+  };
+
+  const onSquareClick = (square: Square) => {
+    if (isSolved || isLost) {
+      return;
+    }
+
+    function resetMoveState() {
+      setMoveFrom('');
+      setOptionSquares({});
+    }
+
+    if (!moveFrom) {
+      const moves = game.moves({ square, verbose: true });
+      if (moves.length > 0) {
+        setMoveFrom(square);
+        const newOptions: { [key: string]: React.CSSProperties } = {};
+        moves.forEach((move) => {
+          newOptions[move.to] = {
+            background: 'radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)',
+            borderRadius: '50%',
+          };
+        });
+        setOptionSquares(newOptions);
+      }
+      return;
+    }
+
+    if (square === moveFrom) {
+      resetMoveState();
+      return;
+    }
+
+    const moveSuccessful = handleMove(moveFrom as Square, square);
+    if (moveSuccessful) {
+      resetMoveState();
+    } else {
+      const moves = game.moves({ square, verbose: true });
+      if (moves.length > 0) {
+        setMoveFrom(square);
+        const newOptions: { [key: string]: React.CSSProperties } = {};
+        moves.forEach((move) => {
+          newOptions[move.to] = {
+            background: 'radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)',
+            borderRadius: '50%',
+          };
+        });
+        setOptionSquares(newOptions);
+      } else {
+        resetMoveState();
+      }
+    }
   };
 
   const handleCorrectMove = async () => {
@@ -100,8 +160,15 @@ export function ChessPuzzle() {
     }
   };
 
-  const handleNextPuzzle = () => {
-    loadPuzzleForLevel();
+  const retryPuzzle = () => {
+    if (currentPuzzle) {
+      const newGame = new Chess(currentPuzzle.fen);
+      setGame(newGame);
+      setFen(newGame.fen());
+      setMessage(currentPuzzle.first);
+      setIsSolved(false);
+      setIsLost(false);
+    }
   };
 
   const handleKeepGoing = async () => {
@@ -138,8 +205,7 @@ export function ChessPuzzle() {
       const payment = await res.json();
       if (payment.success) {
         // Stay on the same level, just reset the board
-        setIsLost(false);
-        handleRestart();
+        retryPuzzle();
       }
     }
   };
@@ -154,7 +220,6 @@ export function ChessPuzzle() {
     if (session?.user?.walletAddress) {
       await setUserState(session.user.walletAddress, newState);
     }
-    loadPuzzleForLevel();
   };
 
   if (allPuzzlesSolved) {
@@ -174,7 +239,12 @@ export function ChessPuzzle() {
         Level {userState.level} ({currentPuzzle?.type})
       </h2>
       <div className="w-full max-w-lg">
-        <Chessboard position={fen} onPieceDrop={onDrop} />
+        <Chessboard
+          position={fen}
+          onPieceDrop={onDrop}
+          onSquareClick={onSquareClick}
+          customSquareStyles={optionSquares}
+        />
       </div>
       <p className={`text-lg font-semibold ${isSolved ? 'text-green-500' : 'text-red-500'}`}>
         {message}
@@ -197,7 +267,7 @@ export function ChessPuzzle() {
       ) : (
         <div className="flex gap-4">
           <button
-            onClick={loadPuzzleForLevel}
+            onClick={retryPuzzle}
             className="px-4 py-2 font-semibold text-white bg-gray-500 rounded-md hover:bg-gray-600"
           >
             Reset
