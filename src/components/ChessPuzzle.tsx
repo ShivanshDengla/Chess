@@ -215,26 +215,11 @@ export function ChessPuzzle() {
       const { finalPayload } = await MiniKit.commandsAsync.pay(payload);
 
       if (finalPayload.status == 'success') {
-        const confirmRes = await fetch(`/api/confirm-payment`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: payload.to,
-            payload: finalPayload as MiniAppPaymentSuccessPayload,
-          }),
-        });
-
-        if (!confirmRes.ok) {
-          throw new Error('Payment confirmation request failed');
-        }
-
-        const payment = await confirmRes.json();
-        if (payment.success) {
-          // Stay on the same level, just reset the board
-          retryPuzzle();
-        } else {
-          setMessage('Payment confirmation failed. Please retry.');
-        }
+        setMessage('Processing payment...');
+        await pollForPaymentConfirmation(
+          payload.to,
+          finalPayload as MiniAppPaymentSuccessPayload
+        );
       } else {
         setMessage('Payment was not completed. Please retry.');
       }
@@ -243,6 +228,53 @@ export function ChessPuzzle() {
       setMessage('An unexpected error occurred. Please try again.');
     } finally {
       setIsPaying(false);
+    }
+  };
+
+  const pollForPaymentConfirmation = async (
+    to: string,
+    payload: MiniAppPaymentSuccessPayload,
+    retries = 10 // e.g., 10 retries, 2 seconds apart for a total of 20 seconds
+  ) => {
+    if (retries === 0) {
+      setMessage('Payment confirmation timed out. Please try again.');
+      setIsPaying(false);
+      return;
+    }
+
+    try {
+      const confirmRes = await fetch(`/api/confirm-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to, payload }),
+      });
+
+      if (!confirmRes.ok) {
+        throw new Error('Payment confirmation request failed');
+      }
+
+      const payment = await confirmRes.json();
+
+      if (payment.status === 'mined') {
+        setMessage('Payment successful! The puzzle has been reset.');
+        retryPuzzle(); // Reset the puzzle on successful payment
+      } else if (payment.status === 'pending') {
+        setTimeout(
+          () => pollForPaymentConfirmation(to, payload, retries - 1),
+          2000
+        ); // Wait 2 seconds before retrying
+      } else {
+        // Handle failed or cancelled status
+        setMessage('Payment confirmation failed. Please retry.');
+      }
+    } catch (error) {
+      console.error('An error occurred during payment confirmation:', error);
+      setMessage('An unexpected error occurred during confirmation.');
+    } finally {
+      if (retries > 0) {
+        // Only stop paying animation when polling is complete
+        setIsPaying(false);
+      }
     }
   };
 

@@ -43,11 +43,16 @@ export async function POST(req: NextRequest) {
 
   if (
     transaction.reference === payload.reference &&
-    isToAddressMatch &&
-    transaction.status !== 'failed'
+    isToAddressMatch
   ) {
-    return NextResponse.json({ success: true });
+    if (transaction.status === 'mined') {
+      return NextResponse.json({ success: true, status: 'mined' });
+    } else if (transaction.status === 'failed' || transaction.status === 'cancelled') {
+      return NextResponse.json({ success: false, status: 'failed' });
+    } else {
+      return NextResponse.json({ success: false, status: 'pending' });
+    }
   } else {
-    return NextResponse.json({ success: false });
+    return NextResponse.json({ success: false, status: 'failed' });
   }
 } 
