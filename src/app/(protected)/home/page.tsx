@@ -1,10 +1,6 @@
 import { auth } from '@/auth';
 import { Page } from '@/components/PageLayout';
-import { Pay } from '@/components/Pay';
-import { Transaction } from '@/components/Transaction';
-import { UserInfo } from '@/components/UserInfo';
-import { Verify } from '@/components/Verify';
-import { ViewPermissions } from '@/components/ViewPermissions';
+import { ChessPuzzle } from '@/components/ChessPuzzle';
 import { Marble, TopBar } from '@worldcoin/mini-apps-ui-kit-react';
 
 export default async function Home() {
@@ -26,11 +22,7 @@ export default async function Home() {
         />
       </Page.Header>
       <Page.Main className="flex flex-col items-center justify-start gap-4 mb-16">
-        <UserInfo />
-        <Verify />
-        <Pay />
-        <Transaction />
-        <ViewPermissions />
+        <ChessPuzzle />
       </Page.Main>
     </>
   );
