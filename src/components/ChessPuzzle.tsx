@@ -215,7 +215,11 @@ export function ChessPuzzle() {
         if (payment.success) {
           // Stay on the same level, just reset the board
           retryPuzzle();
+        } else {
+          setMessage('Payment confirmation failed. Please retry.');
         }
+      } else {
+        setMessage('Payment was not completed. Please retry.');
       }
     } finally {
       setIsPaying(false);
