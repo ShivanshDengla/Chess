@@ -1,13 +1,20 @@
 import { kv } from '@vercel/kv';
 
-export async function getUserPuzzleIndex(walletAddress: string): Promise<number> {
-  const userPuzzleIndex = await kv.get<number>(walletAddress);
-  return userPuzzleIndex ?? 0;
+export interface UserState {
+  level: number;
+  solvedPuzzleIds: number[];
 }
 
-export async function setUserPuzzleIndex(
+export async function getUserState(walletAddress: string): Promise<UserState> {
+  const userState = await kv.get<UserState>(walletAddress);
+  return (
+    userState ?? { level: 1, solvedPuzzleIds: [] }
+  );
+}
+
+export async function setUserState(
   walletAddress: string,
-  puzzleIndex: number
+  state: UserState
 ): Promise<void> {
-  await kv.set(walletAddress, puzzleIndex);
+  await kv.set(walletAddress, state);
 } 
