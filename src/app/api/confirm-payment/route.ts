@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
 
   const transaction = await response.json();
 
+  console.log('Full transaction response from Worldcoin API:', JSON.stringify(transaction, null, 2));
+
   // Defensive check for a valid transaction object
   if (!transaction || typeof transaction.status === 'undefined') {
     console.error('Invalid transaction response from Worldcoin API:', transaction);

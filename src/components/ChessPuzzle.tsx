@@ -197,7 +197,7 @@ export function ChessPuzzle() {
 
       const payload: PayCommandInput = {
         reference: id,
-        to: '0xa057aA66d80ED8be066C8e4261c4b629130679d0',
+        to: '0xe303fffe0221d8f0c6897fec88f8524f7e719fc1',
         tokens: [
           {
             symbol: Tokens.WLD,
@@ -266,15 +266,12 @@ export function ChessPuzzle() {
       } else {
         // Handle failed or cancelled status
         setMessage('Payment confirmation failed. Please retry.');
+        setIsPaying(false); // Stop paying animation on failure
       }
     } catch (error) {
       console.error('An error occurred during payment confirmation:', error);
       setMessage('An unexpected error occurred during confirmation.');
-    } finally {
-      if (retries > 0) {
-        // Only stop paying animation when polling is complete
-        setIsPaying(false);
-      }
+      setIsPaying(false); // Stop paying animation on error
     }
   };
 
