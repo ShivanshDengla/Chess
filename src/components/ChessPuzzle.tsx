@@ -7,7 +7,13 @@ import type { Square, Piece } from 'react-chessboard/dist/chessboard/types';
 import { useSession } from 'next-auth/react';
 import { getUserState, setUserState, UserState } from '@/lib/kv';
 import { getPuzzleForLevel, Puzzle } from '@/lib/puzzles';
-import { MiniKit, PayCommandInput, Tokens, tokenToDecimals } from '@worldcoin/minikit-js';
+import {
+  MiniKit,
+  PayCommandInput,
+  Tokens,
+  tokenToDecimals,
+  MiniAppPaymentSuccessPayload,
+} from '@worldcoin/minikit-js';
 
 export function ChessPuzzle() {
   const { data: session } = useSession();
@@ -183,7 +189,7 @@ export function ChessPuzzle() {
       setIsPaying(true);
       // Logic to pay and retry the same puzzle (level remains unchanged)
       const res = await fetch('/api/initiate-payment', {
-        method: 'GET',
+        method: 'POST',
       });
       const { id } = await res.json();
 
@@ -209,7 +215,10 @@ export function ChessPuzzle() {
         const confirmRes = await fetch(`/api/confirm-payment`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(finalPayload),
+          body: JSON.stringify({
+            to: payload.to,
+            payload: finalPayload as MiniAppPaymentSuccessPayload,
+          }),
         });
         const payment = await confirmRes.json();
         if (payment.success) {
