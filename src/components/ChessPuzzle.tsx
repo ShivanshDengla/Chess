@@ -111,7 +111,7 @@ export function ChessPuzzle() {
       tokens: [
         {
           symbol: Tokens.WLD,
-          token_amount: tokenToDecimals(0.5, Tokens.WLD).toString(),
+          token_amount: tokenToDecimals(0.01, Tokens.WLD).toString(),
         },
       ],
       description: 'Payment to continue to the next puzzle',
@@ -157,7 +157,7 @@ export function ChessPuzzle() {
             onClick={handleKeepGoing}
             className="px-4 py-2 font-semibold text-white bg-green-500 rounded-md hover:bg-green-600"
           >
-            Keep Going (0.5 WLD)
+            Keep Going (0.01 WLD)
           </button>
           <button
             onClick={handleRestart}
