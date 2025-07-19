@@ -14,8 +14,10 @@ export function GET() {
   try {
     const id = crypto.randomUUID();
     return NextResponse.json({ id });
-  } catch (error) {
-    console.warn('crypto.randomUUID() is not available. Using a fallback. (This is expected in non-secure contexts)');
+  } catch {
+    console.warn(
+      'crypto.randomUUID() is not available. Using a fallback. (This is expected in non-secure contexts)'
+    );
     const id = generateRandomString(36);
     return NextResponse.json({ id });
   }
