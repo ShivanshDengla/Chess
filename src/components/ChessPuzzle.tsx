@@ -189,7 +189,7 @@ export function ChessPuzzle() {
 
       const payload: PayCommandInput = {
         reference: id,
-        to: '0xe303fffe0221d8f0c6897fec88f8524f7e719fc1',
+        to: '0xa057aA66d80ED8be066C8e4261c4b629130679d0',
         tokens: [
           {
             symbol: Tokens.WLD,

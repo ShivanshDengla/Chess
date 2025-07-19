@@ -13,23 +13,23 @@ export async function POST(req: NextRequest) {
 
 	// 1. Check that the transaction we received from the mini app is the same one we sent
 	// if (payload.reference === reference) {
-		const response = await fetch(
-			`https://developer.worldcoin.org/api/v2/minikit/transaction/${payload.transaction_id}?app_id=${process.env.NEXT_PUBLIC_APP_ID}`,
-			{
-				method: 'GET',
-				headers: {
-					Authorization: `Bearer ${process.env.DEV_PORTAL_API_KEY}`,
-				},
-			}
-		)
-		const transaction = await response.json()
-
-		// 2. Here we optimistically confirm the transaction.
-		// Otherwise, you can poll until the status == mined
-		if (transaction.status != 'failed') {
-			return NextResponse.json({ success: true })
-		} else {
-			return NextResponse.json({ success: false })
+	const response = await fetch(
+		`https://developer.worldcoin.org/api/v2/minikit/transaction/${payload.transaction_id}?app_id=${process.env.NEXT_PUBLIC_APP_ID}`,
+		{
+			method: 'GET',
+			headers: {
+				Authorization: `Bearer ${process.env.DEV_PORTAL_API_KEY}`,
+			},
 		}
+	);
+	const transaction = await response.json();
+	console.log('Transaction status:', transaction.status);
+	// 2. Here we optimistically confirm the transaction.
+	// Otherwise, you can poll until the status == mined
+	if (transaction.status != 'failed') {
+		return NextResponse.json({ success: true });
+	} else {
+		return NextResponse.json({ success: false });
+	}
 	// }
 } 
