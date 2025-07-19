@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import type { Square, Piece } from 'react-chessboard/dist/chessboard/types';
@@ -37,11 +37,7 @@ export function ChessPuzzle() {
     fetchUserProgress();
   }, [session]);
 
-  useEffect(() => {
-    loadPuzzleForLevel();
-  }, [userState.level]);
-
-  const loadPuzzleForLevel = () => {
+  const loadPuzzleForLevel = useCallback(() => {
     const puzzle = getPuzzleForLevel(userState.level, userState.solvedPuzzleIds);
     if (puzzle) {
       setCurrentPuzzle(puzzle);
@@ -55,8 +51,13 @@ export function ChessPuzzle() {
       setAllPuzzlesSolved(true);
       setMessage('Congratulations! You have solved all the puzzles.');
     }
-  };
+  }, [userState.level, userState.solvedPuzzleIds]);
 
+  useEffect(() => {
+    loadPuzzleForLevel();
+  }, [loadPuzzleForLevel]);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onDrop = (sourceSquare: Square, targetSquare: Square, _piece: Piece): boolean => {
     if (isSolved || isLost || !currentPuzzle) return false;
 
