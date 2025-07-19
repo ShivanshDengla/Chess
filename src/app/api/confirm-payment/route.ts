@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   console.log('Full transaction response from Worldcoin API:', JSON.stringify(transaction, null, 2));
 
   // Defensive check for a valid transaction object
-  if (!transaction || typeof transaction.status === 'undefined') {
+  if (!transaction || typeof transaction.transactionStatus === 'undefined') {
     console.error(
       'Invalid transaction response from Worldcoin API. This might be due to an incorrect APP_ID or DEV_PORTAL_API_KEY. Please check your environment variables.',
       transaction
@@ -42,22 +42,24 @@ export async function POST(req: NextRequest) {
   }
 
   const isToAddressMatch =
-    transaction.to && to && transaction.to.toLowerCase() === to.toLowerCase();
+    transaction.recipientAddress &&
+    to &&
+    transaction.recipientAddress.toLowerCase() === to.toLowerCase();
 
   console.log('--- Payment Confirmation ---');
   console.log(`Received Transaction ID: ${payload.transaction_id}`);
-  console.log(`Transaction Status from API: ${transaction.status}`);
+  console.log(`Transaction Status from API: ${transaction.transactionStatus}`);
   console.log(`Reference Match: ${transaction.reference === payload.reference}`);
   console.log(`Recipient Match (case-insensitive): ${isToAddressMatch}`);
   console.log('--------------------------');
 
-  if (
-    transaction.reference === payload.reference &&
-    isToAddressMatch
-  ) {
-    if (transaction.status === 'mined') {
+  if (transaction.reference === payload.reference && isToAddressMatch) {
+    if (transaction.transactionStatus === 'mined') {
       return NextResponse.json({ success: true, status: 'mined' });
-    } else if (transaction.status === 'failed' || transaction.status === 'cancelled') {
+    } else if (
+      transaction.transactionStatus === 'failed' ||
+      transaction.transactionStatus === 'cancelled'
+    ) {
       return NextResponse.json({ success: false, status: 'failed' });
     } else {
       return NextResponse.json({ success: false, status: 'pending' });
