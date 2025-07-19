@@ -25,31 +25,26 @@ export async function POST(req: NextRequest) {
 
   const transaction = await response.json();
 
+  // Defensive check for a valid transaction object
+  if (!transaction || typeof transaction.status === 'undefined') {
+    console.error('Invalid transaction response from Worldcoin API:', transaction);
+    return NextResponse.json({ success: false });
+  }
+
+  const isToAddressMatch =
+    transaction.to && to && transaction.to.toLowerCase() === to.toLowerCase();
+
   console.log('--- Payment Confirmation ---');
-  console.log('Transaction from Worldcoin API:', transaction);
-  console.log('Data from Mini App:', { to, payload });
-  console.log('--- Comparison Details ---');
-  console.log(`transaction.reference: ${transaction.reference}`);
-  console.log(`payload.reference:     ${payload.reference}`);
-  console.log(`Reference match? ${transaction.reference == payload.reference}`);
-  console.log(`transaction.to: ${transaction.to}`);
-  console.log(`"to" from request: ${to}`);
-  console.log(`Addresses match? (case-sensitive): ${transaction.to == to}`);
-  console.log(
-    `Addresses match? (case-insensitive): ${
-      transaction.to.toLowerCase() == to.toLowerCase()
-    }`
-  );
-  console.log(`transaction.status: ${transaction.status}`);
-  console.log(`Status !='failed'? ${transaction.status != 'failed'}`);
+  console.log(`Received Transaction ID: ${payload.transaction_id}`);
+  console.log(`Transaction Status from API: ${transaction.status}`);
+  console.log(`Reference Match: ${transaction.reference === payload.reference}`);
+  console.log(`Recipient Match (case-insensitive): ${isToAddressMatch}`);
   console.log('--------------------------');
 
-  // Here we optimistically confirm the transaction.
-  // We also check that the transaction details match the payload from the mini app
   if (
-    transaction.reference == payload.reference &&
-    transaction.to.toLowerCase() == to.toLowerCase() &&
-    transaction.status != 'failed'
+    transaction.reference === payload.reference &&
+    isToAddressMatch &&
+    transaction.status !== 'failed'
   ) {
     return NextResponse.json({ success: true });
   } else {

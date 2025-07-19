@@ -14,6 +14,7 @@ import {
   tokenToDecimals,
   MiniAppPaymentSuccessPayload,
 } from '@worldcoin/minikit-js';
+import { useWindowSize } from '@/hooks/useWindowSize';
 
 export function ChessPuzzle() {
   const { data: session } = useSession();
@@ -31,6 +32,7 @@ export function ChessPuzzle() {
   const [moveFrom, setMoveFrom] = useState('');
   const [optionSquares, setOptionSquares] = useState({});
   const [isPaying, setIsPaying] = useState(false);
+  const { width } = useWindowSize();
 
   useEffect(() => {
     MiniKit.install();
@@ -195,7 +197,7 @@ export function ChessPuzzle() {
 
       const payload: PayCommandInput = {
         reference: id,
-        to: '0xe303fffe0221d8f0c6897fec88f8524f7e719fc1',
+        to: '0xa057aA66d80ED8be066C8e4261c4b629130679d0',
         tokens: [
           {
             symbol: Tokens.WLD,
@@ -206,6 +208,7 @@ export function ChessPuzzle() {
       };
 
       if (!MiniKit.isInstalled()) {
+        setMessage('MiniKit not installed. Please reload.');
         return;
       }
 
@@ -220,6 +223,11 @@ export function ChessPuzzle() {
             payload: finalPayload as MiniAppPaymentSuccessPayload,
           }),
         });
+
+        if (!confirmRes.ok) {
+          throw new Error('Payment confirmation request failed');
+        }
+
         const payment = await confirmRes.json();
         if (payment.success) {
           // Stay on the same level, just reset the board
@@ -230,12 +238,21 @@ export function ChessPuzzle() {
       } else {
         setMessage('Payment was not completed. Please retry.');
       }
+    } catch (error) {
+      console.error('An error occurred during payment:', error);
+      setMessage('An unexpected error occurred. Please try again.');
     } finally {
       setIsPaying(false);
     }
   };
 
   const handleRestart = async () => {
+    if (userState.level === 1) {
+      // If already on level 1, just get a new puzzle for this level
+      retryPuzzle();
+      return;
+    }
+
     // Reset to level 1 if the user chooses not to pay
     const newState: UserState = {
       level: 1,
@@ -265,6 +282,7 @@ export function ChessPuzzle() {
       </h2>
       <div className="w-full max-w-lg">
         <Chessboard
+          boardWidth={width ? Math.min(width - 32, 560) : 320}
           position={fen}
           onPieceDrop={onDrop}
           onSquareClick={onSquareClick}
