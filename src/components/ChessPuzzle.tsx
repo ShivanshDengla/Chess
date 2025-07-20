@@ -426,59 +426,78 @@ export function ChessPuzzle() {
         {message}
       </p>
 
-      {!isSolved && !isLost && (
-        <div className="flex gap-4">
-          <button
-            onClick={handleShowHint}
-            disabled={paymentStatus !== 'idle' || !!hintSquare}
-            className="relative px-6 py-3 font-bold text-white transition-all duration-150 ease-in-out bg-black rounded-full shadow-[0_6px_#444] hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-1 active:shadow-none disabled:bg-gray-400 disabled:shadow-none disabled:translate-y-0"
-          >
-            {paymentStatus === 'paying_hint'
-              ? 'Processing...'
-              : 'Show Hint (0.1 WLD)'}
-          </button>
-
-          {isShowingAnswer ? (
+      <div className="h-24">
+        {!isSolved && !isLost && (
+          <div className="flex justify-center gap-4">
             <button
-              onClick={handleNextAfterAnswer}
-              className="relative px-6 py-3 font-bold text-white transition-all duration-150 ease-in-out bg-black rounded-full shadow-[0_6px_#444] hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-1 active:shadow-none"
+              onClick={handleShowHint}
+              disabled={paymentStatus !== 'idle' || !!hintSquare}
+              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_6px_#ab3c3c] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#ab3c3c] active:translate-y-[6px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
             >
-              Next Level
+              {paymentStatus === 'paying_hint' ? (
+                'Processing...'
+              ) : (
+                <div className="flex flex-col items-center">
+                  <span>Show Hint</span>
+                  <span className="text-sm font-bold text-amber-400">0.1 WLD</span>
+                </div>
+              )}
             </button>
-          ) : (
-            <button
-              onClick={handleShowAnswer}
-              disabled={paymentStatus !== 'idle' || !!answerMove}
-              className="relative px-6 py-3 font-bold text-black transition-all duration-150 ease-in-out bg-white border-2 border-black rounded-full shadow-[0_6px_#444] hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-1 active:shadow-none disabled:bg-gray-200 disabled:text-gray-500 disabled:border-gray-400 disabled:shadow-none disabled:translate-y-0"
-            >
-              {paymentStatus === 'paying_answer'
-                ? 'Processing...'
-                : 'Show Answer (0.25 WLD)'}
-            </button>
-          )}
-        </div>
-      )}
 
-      {isLost && (
-        <div className="flex gap-4">
-          <button
-            onClick={handleKeepGoing}
-            disabled={paymentStatus !== 'idle'}
-            className="relative px-6 py-3 font-bold text-white transition-all duration-150 ease-in-out bg-black rounded-full shadow-[0_6px_#444] hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-1 active:shadow-none disabled:bg-gray-400 disabled:shadow-none disabled:translate-y-0"
-          >
-            {paymentStatus === 'paying_continue'
-              ? 'Processing...'
-              : 'Revive (0.5 WLD)'}
-          </button>
-          <button
-            onClick={handleRestart}
-            disabled={paymentStatus !== 'idle'}
-            className="relative px-6 py-3 font-bold text-black transition-all duration-150 ease-in-out bg-white border-2 border-black rounded-full shadow-[0_6px_#444] hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-1 active:shadow-none disabled:bg-gray-200 disabled:text-gray-500 disabled:border-gray-400 disabled:shadow-none disabled:translate-y-0"
-          >
-            Restart
-          </button>
-        </div>
-      )}
+            {isShowingAnswer ? (
+              <button
+                onClick={handleNextAfterAnswer}
+                className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_6px_#ab3c3c] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#ab3c3c] active:translate-y-[6px] active:shadow-none"
+              >
+                Next Level
+              </button>
+            ) : (
+              <button
+                onClick={handleShowAnswer}
+                disabled={paymentStatus !== 'idle' || !!answerMove}
+                className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_6px_#ab3c3c] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#ab3c3c] active:translate-y-[6px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
+              >
+                {paymentStatus === 'paying_answer' ? (
+                  'Processing...'
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <span>Show Answer</span>
+                    <span className="text-sm font-bold text-amber-400">
+                      0.25 WLD
+                    </span>
+                  </div>
+                )}
+              </button>
+            )}
+          </div>
+        )}
+
+        {isLost && (
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={handleKeepGoing}
+              disabled={paymentStatus !== 'idle'}
+              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_6px_#ab3c3c] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#ab3c3c] active:translate-y-[6px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
+            >
+              {paymentStatus === 'paying_continue' ? (
+                'Processing...'
+              ) : (
+                <div className="flex flex-col items-center">
+                  <span>Revive</span>
+                  <span className="text-sm font-bold text-amber-400">0.5 WLD</span>
+                </div>
+              )}
+            </button>
+            <button
+              onClick={handleRestart}
+              disabled={paymentStatus !== 'idle'}
+              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_6px_#ab3c3c] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#ab3c3c] active:translate-y-[6px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
+            >
+              Restart
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 } 
