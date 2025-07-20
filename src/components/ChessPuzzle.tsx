@@ -456,8 +456,8 @@ export function ChessPuzzle() {
   return (
     <div className="flex flex-col items-center gap-4">
       <div
-        className="font-nunito font-bold text-black/10"
-        style={{ fontSize: '12rem' }}
+        className="font-nunito font-bold text-black/10 mb-[-2rem]"
+        style={{ fontSize: '6rem' }}
       >
         {userState.level}
       </div>
