@@ -23,6 +23,7 @@ type PopupStatus = 'processing' | 'success' | 'error';
 interface UserState {
   level: number;
   solvedPuzzleIds: number[];
+  isLost?: boolean;
 }
 
 export function ChessPuzzle({
@@ -33,6 +34,7 @@ export function ChessPuzzle({
   const [userState, setUserStateClient] = useState<UserState>({
     level: 1,
     solvedPuzzleIds: [],
+    isLost: false,
   });
   const [currentPuzzle, setCurrentPuzzle] = useState<Puzzle | null>(null);
   const [game, setGame] = useState(new Chess());
@@ -65,7 +67,11 @@ export function ChessPuzzle({
     const fetchUserProgress = () => {
       const savedState = localStorage.getItem('userState');
       if (savedState) {
-        setUserStateClient(JSON.parse(savedState));
+        const state: UserState = JSON.parse(savedState);
+        setUserStateClient(state);
+        if (state.isLost) {
+          setIsLost(true);
+        }
       }
     };
     fetchUserProgress();
@@ -132,6 +138,9 @@ export function ChessPuzzle({
 
     setMessage('Wrong move.');
     setIsLost(true);
+    const newState = { ...userState, isLost: true };
+    setUserStateClient(newState);
+    localStorage.setItem('userState', JSON.stringify(newState));
     onMoveResult?.('incorrect');
     return false;
   };
@@ -242,6 +251,7 @@ export function ChessPuzzle({
     const newState: UserState = {
       level: userState.level + 1,
       solvedPuzzleIds: [...userState.solvedPuzzleIds, currentPuzzle.problemid],
+      isLost: false,
     };
 
     setUserStateClient(newState);
@@ -264,6 +274,9 @@ export function ChessPuzzle({
       setIsShowingAnswer(false);
       setPromotionMove(null);
       setBackgroundFlash('');
+      const newState = { ...userState, isLost: false };
+      setUserStateClient(newState);
+      localStorage.setItem('userState', JSON.stringify(newState));
     }
   };
 
@@ -386,6 +399,7 @@ export function ChessPuzzle({
     const newState: UserState = {
       level: 1,
       solvedPuzzleIds: userState.solvedPuzzleIds, // Keep solved history
+      isLost: false,
     };
     setUserStateClient(newState);
     localStorage.setItem('userState', JSON.stringify(newState));
