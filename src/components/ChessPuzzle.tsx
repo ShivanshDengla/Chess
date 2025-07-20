@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
-import type { Square, Piece, Arrow } from 'react-chessboard/dist/chessboard/types';
+import type { Square, Arrow } from 'react-chessboard/dist/chessboard/types';
 import { useSession } from 'next-auth/react';
 import { getUserState, setUserState, UserState } from '@/lib/kv';
 import { getPuzzleForLevel, Puzzle } from '@/lib/puzzles';
@@ -144,11 +144,9 @@ export function ChessPuzzle() {
     return handleMove(sourceSquare, targetSquare);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onPieceDrop = (
     sourceSquare: Square,
-    targetSquare: Square,
-    _piece: Piece
+    targetSquare: Square
   ): boolean => {
     return onDrop(sourceSquare, targetSquare);
   };
