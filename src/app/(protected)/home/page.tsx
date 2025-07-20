@@ -2,7 +2,6 @@
 
 import { Page } from '@/components/PageLayout';
 import { ChessPuzzle } from '@/components/ChessPuzzle';
-import { useState, useEffect } from 'react';
 
 export default function Home() {
   // const [backgroundFlash, setBackgroundFlash] = useState('');
