@@ -49,6 +49,7 @@ export function ChessPuzzle() {
     null
   );
   const { width } = useWindowSize();
+  const [backgroundFlash, setBackgroundFlash] = useState('');
 
   useEffect(() => {
     MiniKit.install();
@@ -78,6 +79,7 @@ export function ChessPuzzle() {
       setAnswerMove(null);
       setIsShowingAnswer(false);
       setPromotionMove(null);
+      setBackgroundFlash('');
     } else {
       setAllPuzzlesSolved(true);
       setPopup({ message: 'Congratulations!', status: 'success' });
@@ -115,6 +117,8 @@ export function ChessPuzzle() {
       setFen(gameCopy.fen());
       setMessage('Correct! Well done.');
       setIsSolved(true);
+      setBackgroundFlash('bg-green-500/20');
+      setTimeout(() => setBackgroundFlash(''), 300);
       setTimeout(() => {
         handleCorrectMove();
       }, 1500);
@@ -123,6 +127,8 @@ export function ChessPuzzle() {
 
     setMessage('Wrong move.');
     setIsLost(true);
+    setBackgroundFlash('bg-red-500/20');
+    setTimeout(() => setBackgroundFlash(''), 300);
     return false;
   };
 
@@ -227,6 +233,7 @@ export function ChessPuzzle() {
     setAnswerMove(null);
     setIsShowingAnswer(false);
     setPromotionMove(null);
+    setBackgroundFlash('');
 
     const newState: UserState = {
       level: userState.level + 1,
@@ -254,6 +261,7 @@ export function ChessPuzzle() {
       setAnswerMove(null);
       setIsShowingAnswer(false);
       setPromotionMove(null);
+      setBackgroundFlash('');
     }
   };
 
@@ -454,7 +462,9 @@ export function ChessPuzzle() {
   const customArrows: Arrow[] = answerMove ? [[answerMove.from, answerMove.to]] : [];
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div
+      className={`flex flex-col items-center gap-4 transition-colors duration-300 ${backgroundFlash}`}
+    >
       <div
         className="font-nunito font-bold text-black/10 mb-[0rem] mt-[-7rem]"
         style={{ fontSize: '4rem' }}
@@ -466,13 +476,17 @@ export function ChessPuzzle() {
         <h2 className="text-center text-xl font-semibold">
           {currentPuzzle?.type}
         </h2>
-        {!message.startsWith('Correct') && !message.startsWith('Wrong') && (
-          <p className="text-lg font-semibold text-[#010101]">{message}</p>
+        {currentPuzzle?.type && message && (
+          <span className="text-xl font-semibold text-gray-400">|</span>
         )}
-        {(message.startsWith('Correct') || message.startsWith('Wrong')) && (
+        {message && (
           <p
             className={`text-lg font-semibold ${
-              message.startsWith('Correct') ? 'text-green-500' : 'text-red-500'
+              message.startsWith('Correct')
+                ? 'text-green-500'
+                : message.startsWith('Wrong')
+                ? 'text-red-500'
+                : 'text-[#010101]'
             }`}
           >
             {message}
