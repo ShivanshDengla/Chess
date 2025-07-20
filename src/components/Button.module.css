@@ -6,6 +6,10 @@
   border-radius: 40px;
   box-shadow: 0 5px #888;
   transition: all 0.15s ease-in-out;
+  width: 11rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .button:hover {
@@ -23,4 +27,10 @@
   color: #6b7280;
   box-shadow: none;
   transform: none;
+}
+
+.price {
+  color: #fcd34d;
+  font-size: 0.875rem;
+  font-weight: bold;
 } 

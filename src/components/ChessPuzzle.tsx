@@ -456,9 +456,11 @@ export function ChessPuzzle() {
   return (
     <div className="flex flex-col items-center gap-4">
       {popup && <Popup message={popup.message} status={popup.status} />}
-      <h2 className="text-xl font-semibold">
-        Level {userState.level} ({currentPuzzle?.type})
-      </h2>
+      <div className="flex h-8 items-center justify-center">
+        <h2 className="text-center text-xl font-semibold">
+          Level {userState.level} ({currentPuzzle?.type})
+        </h2>
+      </div>
       <div className="w-full max-w-lg">
         <Chessboard
           boardWidth={width ? Math.min(width - 32, 560) : 320}
@@ -486,13 +488,13 @@ export function ChessPuzzle() {
       <div className="flex h-10 items-center justify-center">
         <p
           className={`text-lg font-semibold ${
-            isSolved
+            message.startsWith('Correct')
               ? 'text-green-500'
-              : isLost
+              : message.startsWith('Wrong')
               ? 'text-red-500'
               : game.turn() === 'w'
-              ? 'text-[#f0d9b5]'
-              : 'text-[#ab6c00]'
+              ? 'text-[#010101]'
+              : 'text-[#010101]'
           }`}
         >
           {message}
@@ -512,7 +514,7 @@ export function ChessPuzzle() {
               ) : (
                 <div className="flex flex-col items-center">
                   <span>Show Hint</span>
-                  <span className="text-sm font-bold text-amber-400">0.1 WLD</span>
+                  <span className={styles.price}>0.1 WLD</span>
                 </div>
               )}
             </button>
@@ -535,7 +537,7 @@ export function ChessPuzzle() {
                 ) : (
                   <div className="flex flex-col items-center">
                     <span>Show Answer</span>
-                    <span className="text-sm font-bold text-amber-400">
+                    <span className={styles.price}>
                       0.25 WLD
                     </span>
                   </div>
@@ -557,7 +559,7 @@ export function ChessPuzzle() {
               ) : (
                 <div className="flex flex-col items-center">
                   <span>Revive</span>
-                  <span className="text-sm font-bold text-amber-400">0.5 WLD</span>
+                  <span className={styles.price}>0.5 WLD</span>
                 </div>
               )}
             </button>
