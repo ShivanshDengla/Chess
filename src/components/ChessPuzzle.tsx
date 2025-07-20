@@ -418,21 +418,29 @@ export function ChessPuzzle() {
           customArrows={customArrows}
         />
       </div>
-      <p
-        className={`text-lg font-semibold ${
-          isLost ? 'text-red-500' : 'text-green-500'
-        }`}
-      >
-        {message}
-      </p>
+      <div className="flex h-10 items-center justify-center">
+        <p
+          className={`text-lg font-semibold ${
+            isSolved
+              ? 'text-green-500'
+              : isLost
+              ? 'text-red-500'
+              : game.turn() === 'w'
+              ? 'text-[#f0d9b5]'
+              : 'text-[#ab6c00]'
+          }`}
+        >
+          {message}
+        </p>
+      </div>
 
-      <div className="h-24">
+      <div className="flex h-24 items-center justify-center">
         {!isSolved && !isLost && (
           <div className="flex justify-center gap-4">
             <button
               onClick={handleShowHint}
               disabled={paymentStatus !== 'idle' || !!hintSquare}
-              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#444] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
+              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#888] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#888] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
             >
               {paymentStatus === 'paying_hint' ? (
                 'Processing...'
@@ -447,7 +455,7 @@ export function ChessPuzzle() {
             {isShowingAnswer ? (
               <button
                 onClick={handleNextAfterAnswer}
-                className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#444] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-[5px] active:shadow-none"
+                className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#888] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#888] active:translate-y-[5px] active:shadow-none"
               >
                 Next Level
               </button>
@@ -455,7 +463,7 @@ export function ChessPuzzle() {
               <button
                 onClick={handleShowAnswer}
                 disabled={paymentStatus !== 'idle' || !!answerMove}
-                className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#444] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
+                className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#888] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#888] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
               >
                 {paymentStatus === 'paying_answer' ? (
                   'Processing...'
@@ -477,7 +485,7 @@ export function ChessPuzzle() {
             <button
               onClick={handleKeepGoing}
               disabled={paymentStatus !== 'idle'}
-              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#444] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
+              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#888] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#888] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
             >
               {paymentStatus === 'paying_continue' ? (
                 'Processing...'
@@ -491,7 +499,7 @@ export function ChessPuzzle() {
             <button
               onClick={handleRestart}
               disabled={paymentStatus !== 'idle'}
-              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#444] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
+              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#888] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#888] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
             >
               Restart
             </button>

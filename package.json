@@ -20,6 +20,7 @@
     "chess.js": "^1.4.0",
     "clsx": "^2.1.1",
     "iconoir-react": "^7.11.0",
+    "lucide-react": "^0.525.0",
     "next": "15.2.3",
     "next-auth": "^5.0.0-beta.29",
     "react": "^19.0.0",

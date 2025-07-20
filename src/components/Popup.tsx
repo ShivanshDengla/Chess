@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock, Check } from 'iconoir-react';
+import { Check, Clock } from 'lucide-react';
 
 interface PopupProps {
   message: string;
@@ -9,20 +9,35 @@ interface PopupProps {
 
 export function Popup({ message, status }: PopupProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="flex flex-col items-center justify-center gap-4 rounded-2xl bg-white p-8 shadow-2xl">
         {status === 'processing' && (
           <div className="animate-spin">
-            <Clock className="h-16 w-16 text-gray-500" />
+            <Clock className="h-12 w-12 text-blue-500" />
           </div>
         )}
-        {status === 'success' && <Check className="h-16 w-16 text-green-500" />}
+        {status === 'success' && (
+          <Check className="h-12 w-12 text-green-500" />
+        )}
         {status === 'error' && (
-          <div className="h-16 w-16 text-red-500 font-bold text-4xl flex items-center justify-center">
-            !
+          <div className="text-red-500">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="lucide lucide-x-circle h-12 w-12"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="m15 9-6 6" />
+              <path d="m9 9 6 6" />
+            </svg>
           </div>
         )}
-        <p className="text-center text-lg font-semibold">{message}</p>
+        <p className="text-center text-lg font-semibold text-black">{message}</p>
       </div>
     </div>
   );
