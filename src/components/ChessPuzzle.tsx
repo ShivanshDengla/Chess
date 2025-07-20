@@ -22,7 +22,11 @@ type PromotionPiece = 'q' | 'r' | 'b' | 'n';
 type PaymentStatus = 'idle' | 'paying_continue' | 'paying_hint' | 'paying_answer';
 type PopupStatus = 'processing' | 'success' | 'error';
 
-export function ChessPuzzle() {
+export function ChessPuzzle({
+  onMoveResult,
+}: {
+  onMoveResult?: (result: 'correct' | 'incorrect') => void;
+}) {
   const { data: session } = useSession();
   const [userState, setUserStateClient] = useState<UserState>({
     level: 1,
@@ -49,6 +53,7 @@ export function ChessPuzzle() {
     null
   );
   const { width } = useWindowSize();
+  const [backgroundFlash, setBackgroundFlash] = useState('');
 
   useEffect(() => {
     MiniKit.install();
@@ -78,6 +83,7 @@ export function ChessPuzzle() {
       setAnswerMove(null);
       setIsShowingAnswer(false);
       setPromotionMove(null);
+      setBackgroundFlash('');
     } else {
       setAllPuzzlesSolved(true);
       setPopup({ message: 'Congratulations!', status: 'success' });
@@ -110,34 +116,22 @@ export function ChessPuzzle() {
       return false;
     }
 
-    let flashClass = '';
     if (from === solutionFrom && to === solutionTo) {
       setGame(gameCopy);
       setFen(gameCopy.fen());
       setMessage('Correct! Well done.');
       setIsSolved(true);
-      flashClass = 'bg-green-500/20';
+      onMoveResult?.('correct');
       setTimeout(() => {
         handleCorrectMove();
       }, 1500);
-    } else {
-      setMessage('Wrong move.');
-      setIsLost(true);
-      flashClass = 'bg-red-500/20';
+      return true;
     }
 
-    if (flashClass) {
-      document.body.classList.add(flashClass, 'transition-colors', 'duration-300');
-      setTimeout(() => {
-        document.body.classList.remove(
-          flashClass,
-          'transition-colors',
-          'duration-300'
-        );
-      }, 300);
-    }
-
-    return move !== null && from === solutionFrom && to === solutionTo;
+    setMessage('Wrong move.');
+    setIsLost(true);
+    onMoveResult?.('incorrect');
+    return false;
   };
 
   const onDrop = (sourceSquare: Square, targetSquare: Square): boolean => {
@@ -241,6 +235,7 @@ export function ChessPuzzle() {
     setAnswerMove(null);
     setIsShowingAnswer(false);
     setPromotionMove(null);
+    setBackgroundFlash('');
 
     const newState: UserState = {
       level: userState.level + 1,
@@ -268,6 +263,7 @@ export function ChessPuzzle() {
       setAnswerMove(null);
       setIsShowingAnswer(false);
       setPromotionMove(null);
+      setBackgroundFlash('');
     }
   };
 
@@ -468,7 +464,9 @@ export function ChessPuzzle() {
   const customArrows: Arrow[] = answerMove ? [[answerMove.from, answerMove.to]] : [];
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div
+      className={`flex flex-col items-center gap-4 transition-colors duration-300 ${backgroundFlash}`}
+    >
       <div
         className="font-nunito font-bold text-black/10 mb-[0rem] mt-[-7rem]"
         style={{ fontSize: '4rem' }}
@@ -497,7 +495,7 @@ export function ChessPuzzle() {
           </p>
         )}
       </div>
-      <div className="w-full max-w-lg bg-transparent">
+      <div className="w-full max-w-lg">
         <Chessboard
           boardWidth={width ? Math.min(width - 32, 560) : 320}
           position={fen}
