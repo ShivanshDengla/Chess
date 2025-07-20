@@ -18,6 +18,7 @@ import { useWindowSize } from '@/hooks/useWindowSize';
 import { Popup } from './Popup';
 
 type PaymentStatus = 'idle' | 'paying_continue' | 'paying_hint' | 'paying_answer';
+type PopupStatus = 'processing' | 'success' | 'error';
 
 export function ChessPuzzle() {
   const { data: session } = useSession();
@@ -38,7 +39,9 @@ export function ChessPuzzle() {
   const [hintSquare, setHintSquare] = useState<Square | null>(null);
   const [answerMove, setAnswerMove] = useState<{ from: Square; to: Square } | null>(null);
   const [isShowingAnswer, setIsShowingAnswer] = useState(false);
-  const [popup, setPopup] = useState<{ message: string; isError?: boolean } | null>(null);
+  const [popup, setPopup] = useState<{ message: string; status: PopupStatus } | null>(
+    null
+  );
   const { width } = useWindowSize();
 
   useEffect(() => {
@@ -70,13 +73,17 @@ export function ChessPuzzle() {
       setIsShowingAnswer(false);
     } else {
       setAllPuzzlesSolved(true);
-      setPopup({ message: 'Congratulations! You have solved all the puzzles.' });
+      setPopup({ message: 'Congratulations!', status: 'success' });
     }
   }, [userState.level, userState.solvedPuzzleIds]);
 
   useEffect(() => {
     loadPuzzleForLevel();
   }, [loadPuzzleForLevel]);
+
+  const closePopupAfterDelay = (delay = 2000) => {
+    setTimeout(() => setPopup(null), delay);
+  };
 
   const handleMove = (from: Square, to: Square): boolean => {
     if (isSolved || isLost || !currentPuzzle) return false;
@@ -95,7 +102,7 @@ export function ChessPuzzle() {
     if (from === solutionFrom && to === solutionTo) {
       setGame(gameCopy);
       setFen(gameCopy.fen());
-      setPopup({ message: 'Correct! Well done.' });
+      setPopup({ message: 'Correct! Well done.', status: 'success' });
       setIsSolved(true);
       setTimeout(() => {
         handleCorrectMove();
@@ -103,7 +110,12 @@ export function ChessPuzzle() {
       return true;
     }
 
-    setPopup({ message: 'Wrong move. You can pay to continue or restart the puzzle.', isError: true });
+    setPopup({
+      message: 'Wrong move. You can choose to continue or restart the puzzle.',
+      status: 'error',
+    });
+    closePopupAfterDelay();
+    setMessage('Wrong move. You can choose to continue or restart the puzzle.');
     setIsLost(true);
     return false;
   };
@@ -206,7 +218,11 @@ export function ChessPuzzle() {
     return new Promise((resolve, reject) => {
       const poll = async (retriesLeft: number) => {
         if (retriesLeft === 0) {
-          setPopup({ message: 'Payment confirmation timed out. Please try again.', isError: true });
+          setPopup({
+            message: 'Payment confirmation timed out.',
+            status: 'error',
+          });
+          closePopupAfterDelay();
           return resolve();
         }
 
@@ -229,12 +245,17 @@ export function ChessPuzzle() {
           } else if (payment.status === 'pending') {
             setTimeout(() => poll(retriesLeft - 1), 2000);
           } else {
-            setPopup({ message: 'Payment confirmation failed. Please retry.', isError: true });
+            setPopup({ message: 'Payment failed.', status: 'error' });
+            closePopupAfterDelay();
             return resolve();
           }
         } catch (error) {
           console.error('An error occurred during payment confirmation:', error);
-          setPopup({ message: 'An unexpected error occurred during confirmation.', isError: true });
+          setPopup({
+            message: 'An unexpected error occurred.',
+            status: 'error',
+          });
+          closePopupAfterDelay();
           return reject(error);
         }
       };
@@ -252,7 +273,7 @@ export function ChessPuzzle() {
 
     try {
       setPaymentStatus(type);
-      setPopup({ message: 'Initiating payment...' });
+      setPopup({ message: 'Initiating payment...', status: 'processing' });
       const res = await fetch('/api/initiate-payment', { method: 'POST' });
       const { id } = await res.json();
 
@@ -269,25 +290,28 @@ export function ChessPuzzle() {
       };
 
       if (!MiniKit.isInstalled()) {
-        setPopup({ message: 'MiniKit not installed. Please reload.', isError: true });
+        setPopup({ message: 'MiniKit not installed.', status: 'error' });
+        closePopupAfterDelay();
         return;
       }
 
       const { finalPayload } = await MiniKit.commandsAsync.pay(payload);
 
       if (finalPayload.status == 'success') {
-        setPopup({ message: 'Processing payment...' });
+        setPopup({ message: 'Processing payment...', status: 'processing' });
         await pollForPaymentConfirmation(
           payload.to,
           finalPayload as MiniAppPaymentSuccessPayload,
           onSuccess
         );
       } else {
-        setPopup({ message: 'Payment was not completed. Please retry.', isError: true });
+        setPopup({ message: 'Payment was not completed.', status: 'error' });
+        closePopupAfterDelay();
       }
     } catch (error) {
       console.error(`An error occurred during ${type} payment:`, error);
-      setPopup({ message: 'An unexpected error occurred. Please try again.', isError: true });
+      setPopup({ message: 'An unexpected error occurred.', status: 'error' });
+      closePopupAfterDelay();
     } finally {
       setPaymentStatus('idle');
     }
@@ -316,7 +340,8 @@ export function ChessPuzzle() {
       0.5,
       'Payment to restart the puzzle',
       () => {
-        setPopup({ message: 'Payment successful! The puzzle has been reset.' });
+        setPopup({ message: 'Payment successful!', status: 'success' });
+        closePopupAfterDelay();
         retryPuzzle();
       },
       'paying_continue'
@@ -330,7 +355,8 @@ export function ChessPuzzle() {
       0.1,
       'Payment for a hint',
       () => {
-        setPopup({ message: 'Payment successful! Here is your hint.' });
+        setPopup({ message: 'Hint unlocked!', status: 'success' });
+        closePopupAfterDelay();
         setHintSquare(solutionFrom);
       },
       'paying_hint'
@@ -344,7 +370,8 @@ export function ChessPuzzle() {
       0.25,
       'Payment for the answer',
       () => {
-        setPopup({ message: 'Payment successful! Here is the answer.' });
+        setPopup({ message: 'Answer revealed!', status: 'success' });
+        closePopupAfterDelay();
         setAnswerMove({ from, to });
         setIsShowingAnswer(true);
       },
@@ -380,13 +407,7 @@ export function ChessPuzzle() {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      {popup && (
-        <Popup
-          message={popup.message}
-          isError={popup.isError}
-          onClose={() => setPopup(null)}
-        />
-      )}
+      {popup && <Popup message={popup.message} status={popup.status} />}
       <h2 className="text-xl font-semibold">
         Level {userState.level} ({currentPuzzle?.type})
       </h2>
@@ -402,9 +423,7 @@ export function ChessPuzzle() {
       </div>
       <p
         className={`text-lg font-semibold ${
-          isSolved || message.startsWith('Payment successful')
-            ? 'text-green-500'
-            : 'text-red-500'
+          isLost ? 'text-red-500' : 'text-green-500'
         }`}
       >
         {message}
@@ -415,7 +434,7 @@ export function ChessPuzzle() {
           <button
             onClick={handleShowHint}
             disabled={paymentStatus !== 'idle' || !!hintSquare}
-            className="px-6 py-3 font-bold text-white transition-transform duration-150 ease-in-out bg-black rounded-full hover:scale-105 active:scale-95 disabled:bg-gray-400 disabled:hover:scale-100"
+            className="relative px-6 py-3 font-bold text-white transition-all duration-150 ease-in-out bg-black rounded-full shadow-[0_6px_#444] hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-1 active:shadow-none disabled:bg-gray-400 disabled:shadow-none disabled:translate-y-0"
           >
             {paymentStatus === 'paying_hint'
               ? 'Processing...'
@@ -425,7 +444,7 @@ export function ChessPuzzle() {
           {isShowingAnswer ? (
             <button
               onClick={handleNextAfterAnswer}
-              className="px-6 py-3 font-bold text-black transition-transform duration-150 ease-in-out bg-white border-2 border-black rounded-full hover:scale-105 active:scale-95"
+              className="relative px-6 py-3 font-bold text-white transition-all duration-150 ease-in-out bg-black rounded-full shadow-[0_6px_#444] hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-1 active:shadow-none"
             >
               Next Level
             </button>
@@ -433,7 +452,7 @@ export function ChessPuzzle() {
             <button
               onClick={handleShowAnswer}
               disabled={paymentStatus !== 'idle' || !!answerMove}
-              className="px-6 py-3 font-bold text-black transition-transform duration-150 ease-in-out bg-white border-2 border-black rounded-full hover:scale-105 active:scale-95 disabled:bg-gray-200 disabled:text-gray-500 disabled:border-gray-400 disabled:hover:scale-100"
+              className="relative px-6 py-3 font-bold text-black transition-all duration-150 ease-in-out bg-white border-2 border-black rounded-full shadow-[0_6px_#444] hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-1 active:shadow-none disabled:bg-gray-200 disabled:text-gray-500 disabled:border-gray-400 disabled:shadow-none disabled:translate-y-0"
             >
               {paymentStatus === 'paying_answer'
                 ? 'Processing...'
@@ -448,7 +467,7 @@ export function ChessPuzzle() {
           <button
             onClick={handleKeepGoing}
             disabled={paymentStatus !== 'idle'}
-            className="px-6 py-3 font-bold text-white transition-transform duration-150 ease-in-out bg-black rounded-full hover:scale-105 active:scale-95 disabled:bg-gray-400 disabled:hover:scale-100"
+            className="relative px-6 py-3 font-bold text-white transition-all duration-150 ease-in-out bg-black rounded-full shadow-[0_6px_#444] hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-1 active:shadow-none disabled:bg-gray-400 disabled:shadow-none disabled:translate-y-0"
           >
             {paymentStatus === 'paying_continue'
               ? 'Processing...'
@@ -457,7 +476,7 @@ export function ChessPuzzle() {
           <button
             onClick={handleRestart}
             disabled={paymentStatus !== 'idle'}
-            className="px-6 py-3 font-bold text-black transition-transform duration-150 ease-in-out bg-white border-2 border-black rounded-full hover:scale-105 active:scale-95 disabled:bg-gray-200 disabled:text-gray-500 disabled:border-gray-400 disabled:hover:scale-100"
+            className="relative px-6 py-3 font-bold text-black transition-all duration-150 ease-in-out bg-white border-2 border-black rounded-full shadow-[0_6px_#444] hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-1 active:shadow-none disabled:bg-gray-200 disabled:text-gray-500 disabled:border-gray-400 disabled:shadow-none disabled:translate-y-0"
           >
             Restart
           </button>

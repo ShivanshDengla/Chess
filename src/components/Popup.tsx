@@ -1,32 +1,28 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Clock, Check } from 'iconoir-react';
 
 interface PopupProps {
   message: string;
-  onClose: () => void;
-  isError?: boolean;
+  status: 'processing' | 'success' | 'error';
 }
 
-export function Popup({ message, onClose, isError = false }: PopupProps) {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, 3000); // Auto close after 3 seconds
-
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  if (!message) return null;
-
+export function Popup({ message, status }: PopupProps) {
   return (
-    <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50">
-      <div
-        className={`px-6 py-3 rounded-full text-white font-bold ${
-          isError ? 'bg-red-500' : 'bg-green-500'
-        }`}
-      >
-        {message}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="flex flex-col items-center justify-center gap-4 rounded-2xl bg-white p-8 shadow-2xl">
+        {status === 'processing' && (
+          <div className="animate-spin">
+            <Clock className="h-16 w-16 text-gray-500" />
+          </div>
+        )}
+        {status === 'success' && <Check className="h-16 w-16 text-green-500" />}
+        {status === 'error' && (
+          <div className="h-16 w-16 text-red-500 font-bold text-4xl flex items-center justify-center">
+            !
+          </div>
+        )}
+        <p className="text-center text-lg font-semibold">{message}</p>
       </div>
     </div>
   );
