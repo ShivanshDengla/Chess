@@ -119,7 +119,7 @@ export function ChessPuzzle({
     if (from === solutionFrom && to === solutionTo) {
       setGame(gameCopy);
       setFen(gameCopy.fen());
-      setMessage('Correct! Well done.');
+      setMessage('Correct!');
       setIsSolved(true);
       onMoveResult?.('correct');
       setTimeout(() => {
