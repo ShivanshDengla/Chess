@@ -4,8 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import type { Square, Arrow } from 'react-chessboard/dist/chessboard/types';
-import { useSession } from 'next-auth/react';
-import { getUserState, setUserState, UserState } from '@/lib/kv';
 import { getPuzzleForLevel, Puzzle } from '@/lib/puzzles';
 import {
   MiniKit,
@@ -22,13 +20,20 @@ type PromotionPiece = 'q' | 'r' | 'b' | 'n';
 type PaymentStatus = 'idle' | 'paying_continue' | 'paying_hint' | 'paying_answer';
 type PopupStatus = 'processing' | 'success' | 'error';
 
+interface UserState {
+  level: number;
+  solvedPuzzleIds: number[];
+}
+
 export function ChessPuzzle({
   onMoveResult,
 }: {
   onMoveResult?: (result: 'correct' | 'incorrect') => void;
 }) {
-  const { data: session, status } = useSession();
-  const [userState, setUserStateClient] = useState<UserState | null>(null);
+  const [userState, setUserStateClient] = useState<UserState>({
+    level: 1,
+    solvedPuzzleIds: [],
+  });
   const [currentPuzzle, setCurrentPuzzle] = useState<Puzzle | null>(null);
   const [game, setGame] = useState(new Chess());
   const [fen, setFen] = useState('');
@@ -57,19 +62,16 @@ export function ChessPuzzle({
   }, []);
 
   useEffect(() => {
-    const fetchUserProgress = async () => {
-      if (status === 'authenticated' && session?.user?.walletAddress) {
-        const state = await getUserState(session.user.walletAddress);
-        setUserStateClient(state);
-      } else if (status === 'unauthenticated') {
-        setUserStateClient({ level: 1, solvedPuzzleIds: [] });
+    const fetchUserProgress = () => {
+      const savedState = localStorage.getItem('userState');
+      if (savedState) {
+        setUserStateClient(JSON.parse(savedState));
       }
     };
     fetchUserProgress();
-  }, [session, status]);
+  }, []);
 
   const loadPuzzleForLevel = useCallback(() => {
-    if (!userState) return;
     const puzzle = getPuzzleForLevel(userState.level, userState.solvedPuzzleIds);
     if (puzzle) {
       setCurrentPuzzle(puzzle);
@@ -88,13 +90,11 @@ export function ChessPuzzle({
       setAllPuzzlesSolved(true);
       setPopup({ message: 'Congratulations!', status: 'success' });
     }
-  }, [userState]);
+  }, [userState.level, userState.solvedPuzzleIds]);
 
   useEffect(() => {
-    if (userState) {
-      loadPuzzleForLevel();
-    }
-  }, [userState, loadPuzzleForLevel]);
+    loadPuzzleForLevel();
+  }, [loadPuzzleForLevel]);
 
   const closePopupAfterDelay = (delay = 2000) => {
     setTimeout(() => setPopup(null), delay);
@@ -230,7 +230,7 @@ export function ChessPuzzle({
   };
 
   const handleCorrectMove = async () => {
-    if (!currentPuzzle || !userState) return;
+    if (!currentPuzzle) return;
 
     setPopup(null);
     setHintSquare(null);
@@ -245,9 +245,7 @@ export function ChessPuzzle({
     };
 
     setUserStateClient(newState);
-    if (session?.user?.walletAddress) {
-      await setUserState(session.user.walletAddress, newState);
-    }
+    localStorage.setItem('userState', JSON.stringify(newState));
   };
 
   const retryPuzzle = () => {
@@ -378,7 +376,6 @@ export function ChessPuzzle({
   };
 
   const handleRestart = async () => {
-    if (!userState) return;
     if (userState.level === 1) {
       // If already on level 1, just get a new puzzle for this level
       retryPuzzle();
@@ -391,9 +388,7 @@ export function ChessPuzzle({
       solvedPuzzleIds: userState.solvedPuzzleIds, // Keep solved history
     };
     setUserStateClient(newState);
-    if (session?.user?.walletAddress) {
-      await setUserState(session.user.walletAddress, newState);
-    }
+    localStorage.setItem('userState', JSON.stringify(newState));
   };
 
   const handleKeepGoing = async () => {
@@ -443,14 +438,6 @@ export function ChessPuzzle({
   const handleNextAfterAnswer = () => {
     handleCorrectMove();
   };
-
-  if (!userState || !currentPuzzle) {
-    return (
-      <div className="flex flex-col items-center gap-4">
-        <div className="text-2xl font-bold">Loading...</div>
-      </div>
-    );
-  }
 
   if (allPuzzlesSolved) {
     return (
