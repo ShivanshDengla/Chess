@@ -110,7 +110,7 @@ export function ChessPuzzle() {
       return true;
     }
 
-    setMessage('Wrong move. You can choose to continue or restart the puzzle.');
+    setMessage('Wrong move.');
     setIsLost(true);
     return false;
   };
@@ -432,7 +432,7 @@ export function ChessPuzzle() {
             <button
               onClick={handleShowHint}
               disabled={paymentStatus !== 'idle' || !!hintSquare}
-              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_6px_#ab3c3c] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#ab3c3c] active:translate-y-[6px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
+              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#444] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
             >
               {paymentStatus === 'paying_hint' ? (
                 'Processing...'
@@ -447,7 +447,7 @@ export function ChessPuzzle() {
             {isShowingAnswer ? (
               <button
                 onClick={handleNextAfterAnswer}
-                className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_6px_#ab3c3c] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#ab3c3c] active:translate-y-[6px] active:shadow-none"
+                className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#444] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-[5px] active:shadow-none"
               >
                 Next Level
               </button>
@@ -455,7 +455,7 @@ export function ChessPuzzle() {
               <button
                 onClick={handleShowAnswer}
                 disabled={paymentStatus !== 'idle' || !!answerMove}
-                className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_6px_#ab3c3c] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#ab3c3c] active:translate-y-[6px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
+                className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#444] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
               >
                 {paymentStatus === 'paying_answer' ? (
                   'Processing...'
@@ -477,7 +477,7 @@ export function ChessPuzzle() {
             <button
               onClick={handleKeepGoing}
               disabled={paymentStatus !== 'idle'}
-              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_6px_#ab3c3c] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#ab3c3c] active:translate-y-[6px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
+              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#444] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
             >
               {paymentStatus === 'paying_continue' ? (
                 'Processing...'
@@ -491,7 +491,7 @@ export function ChessPuzzle() {
             <button
               onClick={handleRestart}
               disabled={paymentStatus !== 'idle'}
-              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_6px_#ab3c3c] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#ab3c3c] active:translate-y-[6px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
+              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#444] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#444] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
             >
               Restart
             </button>
