@@ -9,7 +9,7 @@ interface PopupProps {
 
 export function Popup({ message, status }: PopupProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="flex flex-col items-center justify-center gap-4 rounded-2xl bg-white p-8 shadow-2xl">
         {status === 'processing' && (
           <div className="animate-spin">

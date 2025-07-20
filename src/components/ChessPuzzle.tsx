@@ -102,7 +102,7 @@ export function ChessPuzzle() {
     if (from === solutionFrom && to === solutionTo) {
       setGame(gameCopy);
       setFen(gameCopy.fen());
-      setPopup({ message: 'Correct! Well done.', status: 'success' });
+      setMessage('Correct! Well done.');
       setIsSolved(true);
       setTimeout(() => {
         handleCorrectMove();
@@ -110,11 +110,6 @@ export function ChessPuzzle() {
       return true;
     }
 
-    setPopup({
-      message: 'Wrong move. You can choose to continue or restart the puzzle.',
-      status: 'error',
-    });
-    closePopupAfterDelay();
     setMessage('Wrong move. You can choose to continue or restart the puzzle.');
     setIsLost(true);
     return false;
@@ -178,6 +173,7 @@ export function ChessPuzzle() {
   const handleCorrectMove = async () => {
     if (!currentPuzzle) return;
 
+    setPopup(null);
     setHintSquare(null);
     setAnswerMove(null);
     setIsShowingAnswer(false);
@@ -203,6 +199,7 @@ export function ChessPuzzle() {
       setIsLost(false);
       setMoveFrom('');
       setOptionSquares({});
+      setPopup(null);
       setHintSquare(null);
       setAnswerMove(null);
       setIsShowingAnswer(false);
