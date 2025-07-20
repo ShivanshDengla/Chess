@@ -468,8 +468,8 @@ export function ChessPuzzle({
       className={`flex flex-col items-center gap-4 transition-colors duration-300 ${backgroundFlash}`}
     >
       <div
-        className="font-nunito font-bold text-black/10 mb-[0rem] mt-[-7rem]"
-        style={{ fontSize: '4rem' }}
+        className="font-nunito font-bold text-black/40 mb-[-1rem] mt-[-7rem]"
+        style={{ fontSize: '5rem' }}
       >
         {userState.level}
       </div>
