@@ -69,9 +69,6 @@ export function ChessPuzzle({
       if (savedState) {
         const state: UserState = JSON.parse(savedState);
         setUserStateClient(state);
-        if (state.isLost) {
-          setIsLost(true);
-        }
       }
     };
     fetchUserProgress();
@@ -84,9 +81,15 @@ export function ChessPuzzle({
       const newGame = new Chess(puzzle.fen);
       setGame(newGame);
       setFen(newGame.fen());
-      setMessage(puzzle.first);
       setIsSolved(false);
-      setIsLost(false);
+
+      if (userState.isLost) {
+        setMessage('Wrong move.');
+        setIsLost(true);
+      } else {
+        setMessage(puzzle.first);
+        setIsLost(false);
+      }
       setHintSquare(null);
       setAnswerMove(null);
       setIsShowingAnswer(false);
@@ -96,7 +99,7 @@ export function ChessPuzzle({
       setAllPuzzlesSolved(true);
       setPopup({ message: 'Congratulations!', status: 'success' });
     }
-  }, [userState.level, userState.solvedPuzzleIds]);
+  }, [userState.level, userState.solvedPuzzleIds, userState.isLost]);
 
   useEffect(() => {
     loadPuzzleForLevel();
