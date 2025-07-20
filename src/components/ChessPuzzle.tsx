@@ -106,6 +106,7 @@ export function ChessPuzzle() {
     return false;
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onDrop = (sourceSquare: Square, targetSquare: Square, _piece: Piece): boolean => {
     return handleMove(sourceSquare, targetSquare);
   };
