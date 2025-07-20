@@ -456,18 +456,27 @@ export function ChessPuzzle() {
   return (
     <div className="flex flex-col items-center gap-4">
       <div
-        className="font-nunito font-bold text-black/10 mb-[-2rem] mt-[-6rem]"
+        className="font-nunito font-bold text-black/10 mb-[0rem] mt-[-7rem]"
         style={{ fontSize: '4rem' }}
       >
         {userState.level}
       </div>
       {popup && <Popup message={popup.message} status={popup.status} />}
-      <div className="flex h-8 items-center justify-center gap-4">
+      <div className="flex h-12 items-center justify-center gap-4">
         <h2 className="text-center text-xl font-semibold">
           {currentPuzzle?.type}
         </h2>
         {!message.startsWith('Correct') && !message.startsWith('Wrong') && (
           <p className="text-lg font-semibold text-[#010101]">{message}</p>
+        )}
+        {(message.startsWith('Correct') || message.startsWith('Wrong')) && (
+          <p
+            className={`text-lg font-semibold ${
+              message.startsWith('Correct') ? 'text-green-500' : 'text-red-500'
+            }`}
+          >
+            {message}
+          </p>
         )}
       </div>
       <div className="w-full max-w-lg">
@@ -494,23 +503,12 @@ export function ChessPuzzle() {
           promotionToSquare={promotionMove?.to ?? null}
         />
       </div>
-      <div className="flex h-2 items-center justify-center">
-        {(message.startsWith('Correct') || message.startsWith('Wrong')) && (
-          <p
-            className={`text-lg font-semibold ${
-              message.startsWith('Correct') ? 'text-green-500' : 'text-red-500'
-            }`}
-          >
-            {message}
-          </p>
-        )}
-      </div>
 
       <div className="flex h-24 items-center justify-center">
         <div
-          className={`${
-            isLost ? 'hidden' : 'flex'
-          } justify-center gap-4 ${isSolved ? 'invisible' : ''}`}
+          className={`flex justify-center gap-4 ${
+            isSolved || isLost ? 'invisible' : ''
+          }`}
         >
           <button
             onClick={handleShowHint}
@@ -555,7 +553,7 @@ export function ChessPuzzle() {
         </div>
 
         {isLost && (
-          <div className="flex justify-center gap-4">
+          <div className="absolute flex justify-center gap-4">
             <button
               onClick={handleKeepGoing}
               disabled={paymentStatus !== 'idle'}
