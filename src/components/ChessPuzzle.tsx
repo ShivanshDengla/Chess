@@ -455,10 +455,13 @@ export function ChessPuzzle() {
 
   return (
     <div className="flex flex-col items-center gap-4">
+      <div className="font-nunito text-9xl font-bold text-black/10">
+        {userState.level}
+      </div>
       {popup && <Popup message={popup.message} status={popup.status} />}
       <div className="flex h-8 items-center justify-center">
         <h2 className="text-center text-xl font-semibold">
-          Level {userState.level} ({currentPuzzle?.type})
+          {currentPuzzle?.type}
         </h2>
       </div>
       <div className="w-full max-w-lg">
@@ -502,50 +505,52 @@ export function ChessPuzzle() {
       </div>
 
       <div className="flex h-24 items-center justify-center">
-        {!isSolved && !isLost && (
-          <div className="flex justify-center gap-4">
+        <div
+          className={`${
+            isLost ? 'hidden' : 'flex'
+          } justify-center gap-4 ${isSolved ? 'invisible' : ''}`}
+        >
+          <button
+            onClick={handleShowHint}
+            disabled={paymentStatus !== 'idle' || !!hintSquare}
+            className={styles.button}
+          >
+            {paymentStatus === 'paying_hint' ? (
+              'Processing...'
+            ) : (
+              <div className="flex flex-col items-center">
+                <span>Show Hint</span>
+                <span className={styles.price}>0.1 WLD</span>
+              </div>
+            )}
+          </button>
+
+          {isShowingAnswer ? (
             <button
-              onClick={handleShowHint}
-              disabled={paymentStatus !== 'idle' || !!hintSquare}
+              onClick={handleNextAfterAnswer}
               className={styles.button}
             >
-              {paymentStatus === 'paying_hint' ? (
+              Next Level
+            </button>
+          ) : (
+            <button
+              onClick={handleShowAnswer}
+              disabled={paymentStatus !== 'idle' || !!answerMove}
+              className={styles.button}
+            >
+              {paymentStatus === 'paying_answer' ? (
                 'Processing...'
               ) : (
                 <div className="flex flex-col items-center">
-                  <span>Show Hint</span>
-                  <span className={styles.price}>0.1 WLD</span>
+                  <span>Show Answer</span>
+                  <span className={styles.price}>
+                    0.25 WLD
+                  </span>
                 </div>
               )}
             </button>
-
-            {isShowingAnswer ? (
-              <button
-                onClick={handleNextAfterAnswer}
-                className={styles.button}
-              >
-                Next Level
-              </button>
-            ) : (
-              <button
-                onClick={handleShowAnswer}
-                disabled={paymentStatus !== 'idle' || !!answerMove}
-                className={styles.button}
-              >
-                {paymentStatus === 'paying_answer' ? (
-                  'Processing...'
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <span>Show Answer</span>
-                    <span className={styles.price}>
-                      0.25 WLD
-                    </span>
-                  </div>
-                )}
-              </button>
-            )}
-          </div>
-        )}
+          )}
+        </div>
 
         {isLost && (
           <div className="flex justify-center gap-4">
