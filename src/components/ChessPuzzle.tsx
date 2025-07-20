@@ -530,6 +530,7 @@ export function ChessPuzzle({
             onClick={handleShowHint}
             disabled={paymentStatus !== 'idle' || !!hintSquare}
             className={styles.button}
+            style={{ backgroundColor: '#f4dcc5', color: 'black' }}
           >
             {paymentStatus === 'paying_hint' ? (
               'Processing...'
@@ -545,6 +546,7 @@ export function ChessPuzzle({
             <button
               onClick={handleNextAfterAnswer}
               className={styles.button}
+              style={{ backgroundColor: '#b58863', color: 'black' }}
             >
               Next Level
             </button>
@@ -553,15 +555,14 @@ export function ChessPuzzle({
               onClick={handleShowAnswer}
               disabled={paymentStatus !== 'idle' || !!answerMove}
               className={styles.button}
+              style={{ backgroundColor: '#b58863', color: 'black' }}
             >
               {paymentStatus === 'paying_answer' ? (
                 'Processing...'
               ) : (
                 <div className="flex flex-col items-center">
                   <span>Show Answer</span>
-                  <span className={styles.price}>
-                    0.25 WLD
-                  </span>
+                  <span className={styles.price}>0.25 WLD</span>
                 </div>
               )}
             </button>
@@ -574,6 +575,7 @@ export function ChessPuzzle({
               onClick={handleKeepGoing}
               disabled={paymentStatus !== 'idle'}
               className={styles.button}
+              style={{ backgroundColor: 'black', color: 'white' }}
             >
               {paymentStatus === 'paying_continue' ? (
                 'Processing...'
@@ -588,6 +590,7 @@ export function ChessPuzzle({
               onClick={handleRestart}
               disabled={paymentStatus !== 'idle'}
               className={styles.button}
+              style={{ backgroundColor: 'white', color: 'black' }}
             >
               Restart
             </button>
