@@ -16,7 +16,9 @@ import {
 } from '@worldcoin/minikit-js';
 import { useWindowSize } from '@/hooks/useWindowSize';
 import { Popup } from './Popup';
+import styles from './Button.module.css';
 
+type PromotionPiece = 'q' | 'r' | 'b' | 'n';
 type PaymentStatus = 'idle' | 'paying_continue' | 'paying_hint' | 'paying_answer';
 type PopupStatus = 'processing' | 'success' | 'error';
 
@@ -36,6 +38,10 @@ export function ChessPuzzle() {
   const [moveFrom, setMoveFrom] = useState('');
   const [optionSquares, setOptionSquares] = useState<Record<string, React.CSSProperties>>({});
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
+  const [promotionMove, setPromotionMove] = useState<{
+    from: Square;
+    to: Square;
+  } | null>(null);
   const [hintSquare, setHintSquare] = useState<Square | null>(null);
   const [answerMove, setAnswerMove] = useState<{ from: Square; to: Square } | null>(null);
   const [isShowingAnswer, setIsShowingAnswer] = useState(false);
@@ -71,6 +77,7 @@ export function ChessPuzzle() {
       setHintSquare(null);
       setAnswerMove(null);
       setIsShowingAnswer(false);
+      setPromotionMove(null);
     } else {
       setAllPuzzlesSolved(true);
       setPopup({ message: 'Congratulations!', status: 'success' });
@@ -85,7 +92,11 @@ export function ChessPuzzle() {
     setTimeout(() => setPopup(null), delay);
   };
 
-  const handleMove = (from: Square, to: Square): boolean => {
+  const handleMove = (
+    from: Square,
+    to: Square,
+    promotion?: PromotionPiece
+  ): boolean => {
     if (isSolved || isLost || !currentPuzzle) return false;
 
     const solution = currentPuzzle.moves.split(';')[0].split('-');
@@ -93,7 +104,7 @@ export function ChessPuzzle() {
     const solutionTo = solution[1];
 
     const gameCopy = new Chess(game.fen());
-    const move = gameCopy.move({ from, to, promotion: 'q' });
+    const move = gameCopy.move({ from, to, promotion });
 
     if (move === null) {
       return false;
@@ -115,9 +126,31 @@ export function ChessPuzzle() {
     return false;
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const onDrop = (sourceSquare: Square, targetSquare: Square, _piece: Piece): boolean => {
+  const onDrop = (sourceSquare: Square, targetSquare: Square): boolean => {
+    const piece = game.get(sourceSquare);
+
+    if (
+      piece?.type === 'p' &&
+      ((piece.color === 'w' && targetSquare.endsWith('8')) ||
+        (piece.color === 'b' && targetSquare.endsWith('1')))
+    ) {
+      const moves = game.moves({ square: sourceSquare, verbose: true });
+      if (moves.some((m) => m.to === targetSquare)) {
+        setPromotionMove({ from: sourceSquare, to: targetSquare });
+        return false;
+      }
+    }
+
     return handleMove(sourceSquare, targetSquare);
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const onPieceDrop = (
+    sourceSquare: Square,
+    targetSquare: Square,
+    _piece: Piece
+  ): boolean => {
+    return onDrop(sourceSquare, targetSquare);
   };
 
   const onSquareClick = (square: Square) => {
@@ -166,7 +199,25 @@ export function ChessPuzzle() {
       return;
     }
 
-    handleMove(moveFrom as Square, square);
+    const moveResult = onDrop(moveFrom as Square, square);
+    if (!moveResult && !promotionMove) {
+      const piece = game.get(square);
+      if (piece && piece.color === game.turn()) {
+        const moves = game.moves({ square, verbose: true });
+        setMoveFrom(square);
+        const newOptions: { [key: string]: React.CSSProperties } = {};
+        moves.forEach((move) => {
+          newOptions[move.to] = {
+            background:
+              'radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)',
+            borderRadius: '50%',
+          };
+        });
+        setOptionSquares(newOptions);
+        return;
+      }
+    }
+
     resetMoveState();
   };
 
@@ -177,6 +228,7 @@ export function ChessPuzzle() {
     setHintSquare(null);
     setAnswerMove(null);
     setIsShowingAnswer(false);
+    setPromotionMove(null);
 
     const newState: UserState = {
       level: userState.level + 1,
@@ -203,6 +255,7 @@ export function ChessPuzzle() {
       setHintSquare(null);
       setAnswerMove(null);
       setIsShowingAnswer(false);
+      setPromotionMove(null);
     }
   };
 
@@ -412,10 +465,24 @@ export function ChessPuzzle() {
         <Chessboard
           boardWidth={width ? Math.min(width - 32, 560) : 320}
           position={fen}
-          onPieceDrop={onDrop}
+          onPieceDrop={onPieceDrop}
           onSquareClick={onSquareClick}
           customSquareStyles={getCustomSquareStyles()}
           customArrows={customArrows}
+          promotionDialogVariant="vertical"
+          onPromotionPieceSelect={(piece) => {
+            if (promotionMove && piece) {
+              handleMove(
+                promotionMove.from,
+                promotionMove.to,
+                piece.toLowerCase().charAt(1) as PromotionPiece
+              );
+              setPromotionMove(null);
+              return true;
+            }
+            return false;
+          }}
+          promotionToSquare={promotionMove?.to ?? null}
         />
       </div>
       <div className="flex h-10 items-center justify-center">
@@ -440,7 +507,7 @@ export function ChessPuzzle() {
             <button
               onClick={handleShowHint}
               disabled={paymentStatus !== 'idle' || !!hintSquare}
-              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#888] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#888] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
+              className={styles.button}
             >
               {paymentStatus === 'paying_hint' ? (
                 'Processing...'
@@ -455,7 +522,7 @@ export function ChessPuzzle() {
             {isShowingAnswer ? (
               <button
                 onClick={handleNextAfterAnswer}
-                className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#888] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#888] active:translate-y-[5px] active:shadow-none"
+                className={styles.button}
               >
                 Next Level
               </button>
@@ -463,7 +530,7 @@ export function ChessPuzzle() {
               <button
                 onClick={handleShowAnswer}
                 disabled={paymentStatus !== 'idle' || !!answerMove}
-                className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#888] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#888] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
+                className={styles.button}
               >
                 {paymentStatus === 'paying_answer' ? (
                   'Processing...'
@@ -485,7 +552,7 @@ export function ChessPuzzle() {
             <button
               onClick={handleKeepGoing}
               disabled={paymentStatus !== 'idle'}
-              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#888] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#888] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
+              className={styles.button}
             >
               {paymentStatus === 'paying_continue' ? (
                 'Processing...'
@@ -499,7 +566,7 @@ export function ChessPuzzle() {
             <button
               onClick={handleRestart}
               disabled={paymentStatus !== 'idle'}
-              className="relative rounded-[40px] bg-black px-6 py-3 font-bold text-white shadow-[0_5px_#888] transition-all duration-150 ease-in-out hover:translate-y-0.5 hover:shadow-[0_4px_#888] active:translate-y-[5px] active:shadow-none disabled:translate-y-0 disabled:bg-gray-400 disabled:text-gray-500 disabled:shadow-none"
+              className={styles.button}
             >
               Restart
             </button>
