@@ -1,0 +1,165 @@
+body {
+    font-size: 0.75em; /* Change this to control the size of the loader; 0.5em , 0.7em, 1em, 1.5em */
+  
+}
+#wrapper {
+  width: 12em;
+  margin: 0 auto;
+  margin-top:12.5em;
+  transform-origin: 6em 6em;
+  opacity:0;
+}
+.restart-css {
+  animation: setBoard 4s ease-in infinite, boardFadeFX 4s ease-in infinite;
+  -webkit-animation: setBoard 4s ease-in infinite, boardFadeFX 4s ease-in infinite;
+}
+
+svg {
+  position: relative;
+  width: 1.375em;
+  left: 0;
+  top: -1.125em;
+  display: block;
+  opacity: 0;
+/*   animation: fadeout 4s ease-in infinite; */
+}
+.pawnimate {
+    animation: settledown 4s ease-in infinite;
+    -webkit-animation: settledown 4s ease-in infinite;
+}
+.whitefrontrow li svg {fill:url(#whiteGradient);}
+.whitebackrow li svg {fill:url(#whiteGradient);}
+.blackfrontrow li svg {fill:url(#blackGradient);}
+.blackbackrow li svg {fill:url(#blackGradient);}
+
+.blackfrontrow li:nth-child(2) > svg {animation-delay: .1s;}
+.blackfrontrow li:nth-child(3) > svg {animation-delay: .2s;}
+.blackfrontrow li:nth-child(4) > svg {animation-delay: .3s;}
+.blackfrontrow li:nth-child(5) > svg {animation-delay: .4s;}
+.blackfrontrow li:nth-child(6) > svg {animation-delay: .5s;}
+.blackfrontrow li:nth-child(7) > svg {animation-delay: .6s;}
+.blackfrontrow li:nth-child(8) > svg {animation-delay: .7s;}
+
+.blackbackrow li:nth-child(1) > svg {animation-delay: .7s;}
+.blackbackrow li:nth-child(2) > svg {animation-delay: .8s;}
+.blackbackrow li:nth-child(3) > svg {animation-delay: .9s;}
+.blackbackrow li:nth-child(4) > svg {animation-delay: 1s;}
+.blackbackrow li:nth-child(5) > svg {animation-delay: 1.1s;}
+.blackbackrow li:nth-child(6) > svg {animation-delay: 1.2s;}
+.blackbackrow li:nth-child(7) > svg {animation-delay: 1.3s;}
+.blackbackrow li:nth-child(8) > svg {animation-delay: 1.4s;}
+
+.whitefrontrow li:nth-child(1) > svg {animation-delay: 1.2s;}
+.whitefrontrow li:nth-child(2) > svg {animation-delay: 1.3s;}
+.whitefrontrow li:nth-child(3) > svg {animation-delay: 1.4s;}
+.whitefrontrow li:nth-child(4) > svg {animation-delay: 1.5s;}
+.whitefrontrow li:nth-child(5) > svg {animation-delay: 1.6s;}
+.whitefrontrow li:nth-child(6) > svg {animation-delay: 1.7s;}
+.whitefrontrow li:nth-child(7) > svg {animation-delay: 1.8s;}
+.whitefrontrow li:nth-child(8) > svg {animation-delay: 1.9s;}
+
+.whitebackrow li:nth-child(1) > svg {animation-delay: 1.9s;}
+.whitebackrow li:nth-child(2) > svg {animation-delay: 2s;}
+.whitebackrow li:nth-child(3) > svg {animation-delay: 2.1s;}
+.whitebackrow li:nth-child(4) > svg {animation-delay: 2.2s;}
+.whitebackrow li:nth-child(5) > svg {animation-delay: 2.3s;}
+.whitebackrow li:nth-child(6) > svg {animation-delay: 2.4s;}
+.whitebackrow li:nth-child(7) > svg {animation-delay: 2.5s;}
+.whitebackrow li:nth-child(8) > svg {animation-delay: 2.6s;}
+@keyframes settledown {
+    0% {transform: translateY(-5em); opacity: 0;}
+   10% {transform: translateY(-5em); opacity: 0;} 
+   12% {transform: translateY(-1.125em); opacity: 1;}
+  100% {transform: translateY(-1.125em); opacity: 1;}
+}
+@keyframes setBoard {
+    0% {transform: translate(0px, -9em) scaleY(1.2) rotate(-10deg);}
+    5% {transform: translate(0px, 0.3em) rotate(10deg);}
+    7% {transform: translate(0px, -0.4em) rotate(0deg);}
+    8% {transform: translate(0px, 0.3em);}
+   95% {transform: translate(0px, 0.3em);}
+  100% {transform: translate(0px, 9em);}
+}
+@keyframes boardFadeFX {
+    0% {opacity:0;}
+    5% {opacity:1;}
+   95% {opacity:1;}
+  100% {opacity:0;}
+}
+
+@-webkit-keyframes settledown {
+    0% {transform: translateY(-5em); opacity: 0;}
+   10% {transform: translateY(-5em); opacity: 0;} 
+   12% {transform: translateY(-1.125em); opacity: 1;}
+  100% {transform: translateY(-1.125em); opacity: 1;}
+}
+@keyframes setBoard {
+    0% {transform: translate(0px, -9em) scaleY(1.2) rotate(-10deg);}
+    5% {transform: translate(0px, 0.3em) rotate(10deg);}
+    7% {transform: translate(0px, -0.4em) rotate(0deg);}
+    8% {transform: translate(0px, 0.3em);}
+   95% {transform: translate(0px, 0.3em);}
+  100% {transform: translate(0px, 9em);}
+}
+@keyframes boardFadeFX {
+    0% {opacity:0;}
+    5% {opacity:1;}
+   95% {opacity:1;}
+  100% {opacity:0;}
+}
+ul {
+  list-style-type: none;
+  float: left;
+  margin: 0;
+  padding: 0;
+}
+ul li {
+  float: left;
+  height: 1.25em;
+  width: 1.5em;
+}
+
+.evenrow li:nth-child(odd) {
+  background: #2EB26C;
+}
+
+.evenrow li:nth-child(even) {
+  background: #afcbb4;
+}
+.oddrow li:nth-child(even) {
+  background: #2EB26C;
+}
+
+.oddrow li:nth-child(odd) {
+  background: #afcbb4;
+}
+#side {
+  width: 100%;
+  height: 2.125em;
+  background: #008c58;
+  float: left;
+  position: relative;
+  top: -1.25em;
+  z-index: -100;
+  border-radius: 0 0 0.75em 0.75em;
+  
+}
+#topleftcorner {
+  border-top-left-radius: 0.75em;
+}
+#toprightcorner {
+  border-top-right-radius: 0.75em;
+}
+#bottomleftcorner {
+  border-bottom-left-radius: 0.75em;
+}
+#bottomrightcorner {
+  border-bottom-right-radius: 0.75em;
+}
+p {
+  text-align: center;
+  font-size: .7em;
+  display: inline-block;
+  margin: 0 auto;
+  font-family: arial;
+} 
