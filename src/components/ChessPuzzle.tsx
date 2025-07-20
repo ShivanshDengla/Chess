@@ -27,11 +27,8 @@ export function ChessPuzzle({
 }: {
   onMoveResult?: (result: 'correct' | 'incorrect') => void;
 }) {
-  const { data: session } = useSession();
-  const [userState, setUserStateClient] = useState<UserState>({
-    level: 1,
-    solvedPuzzleIds: [],
-  });
+  const { data: session, status } = useSession();
+  const [userState, setUserStateClient] = useState<UserState | null>(null);
   const [currentPuzzle, setCurrentPuzzle] = useState<Puzzle | null>(null);
   const [game, setGame] = useState(new Chess());
   const [fen, setFen] = useState('');
@@ -61,15 +58,18 @@ export function ChessPuzzle({
 
   useEffect(() => {
     const fetchUserProgress = async () => {
-      if (session?.user?.walletAddress) {
+      if (status === 'authenticated' && session?.user?.walletAddress) {
         const state = await getUserState(session.user.walletAddress);
         setUserStateClient(state);
+      } else if (status === 'unauthenticated') {
+        setUserStateClient({ level: 1, solvedPuzzleIds: [] });
       }
     };
     fetchUserProgress();
-  }, [session]);
+  }, [session, status]);
 
   const loadPuzzleForLevel = useCallback(() => {
+    if (!userState) return;
     const puzzle = getPuzzleForLevel(userState.level, userState.solvedPuzzleIds);
     if (puzzle) {
       setCurrentPuzzle(puzzle);
@@ -88,11 +88,13 @@ export function ChessPuzzle({
       setAllPuzzlesSolved(true);
       setPopup({ message: 'Congratulations!', status: 'success' });
     }
-  }, [userState.level, userState.solvedPuzzleIds]);
+  }, [userState]);
 
   useEffect(() => {
-    loadPuzzleForLevel();
-  }, [loadPuzzleForLevel]);
+    if (userState) {
+      loadPuzzleForLevel();
+    }
+  }, [userState, loadPuzzleForLevel]);
 
   const closePopupAfterDelay = (delay = 2000) => {
     setTimeout(() => setPopup(null), delay);
@@ -228,7 +230,7 @@ export function ChessPuzzle({
   };
 
   const handleCorrectMove = async () => {
-    if (!currentPuzzle) return;
+    if (!currentPuzzle || !userState) return;
 
     setPopup(null);
     setHintSquare(null);
@@ -376,6 +378,7 @@ export function ChessPuzzle({
   };
 
   const handleRestart = async () => {
+    if (!userState) return;
     if (userState.level === 1) {
       // If already on level 1, just get a new puzzle for this level
       retryPuzzle();
@@ -440,6 +443,14 @@ export function ChessPuzzle({
   const handleNextAfterAnswer = () => {
     handleCorrectMove();
   };
+
+  if (!userState || !currentPuzzle) {
+    return (
+      <div className="flex flex-col items-center gap-4">
+        <div className="text-2xl font-bold">Loading...</div>
+      </div>
+    );
+  }
 
   if (allPuzzlesSolved) {
     return (
