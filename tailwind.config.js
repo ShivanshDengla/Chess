@@ -10,6 +10,9 @@ module.exports = {
       fontFamily: {
         nunito: ['var(--font-nunito)'],
       },
+      fontSize: {
+        '10xl': '12rem',
+      },
     },
   },
   plugins: [],

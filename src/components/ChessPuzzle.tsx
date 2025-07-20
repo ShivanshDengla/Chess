@@ -455,7 +455,7 @@ export function ChessPuzzle() {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="font-nunito text-9xl font-bold text-black/10">
+      <div className="font-nunito text-10xl font-bold text-black/10">
         {userState.level}
       </div>
       {popup && <Popup message={popup.message} status={popup.status} />}
