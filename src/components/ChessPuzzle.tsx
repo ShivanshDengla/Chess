@@ -454,9 +454,9 @@ export function ChessPuzzle() {
   const customArrows: Arrow[] = answerMove ? [[answerMove.from, answerMove.to]] : [];
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-4">
       <div
-        className="font-nunito font-bold text-black/10 mb-[-3rem] mt-[-1.5rem]"
+        className="font-nunito font-bold text-black/10 mb-[-2rem] mt-[-4rem]"
         style={{ fontSize: '4rem' }}
       >
         {userState.level}
