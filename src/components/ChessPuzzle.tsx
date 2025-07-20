@@ -454,9 +454,9 @@ export function ChessPuzzle() {
   const customArrows: Arrow[] = answerMove ? [[answerMove.from, answerMove.to]] : [];
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-2">
       <div
-        className="font-nunito font-bold text-black/10 mb-[-2rem]"
+        className="font-nunito font-bold text-black/10 mb-[-3rem] mt-[-1.5rem]"
         style={{ fontSize: '4rem' }}
       >
         {userState.level}
@@ -494,7 +494,7 @@ export function ChessPuzzle() {
           promotionToSquare={promotionMove?.to ?? null}
         />
       </div>
-      <div className="flex h-10 items-center justify-center">
+      <div className="flex h-2 items-center justify-center">
         {(message.startsWith('Correct') || message.startsWith('Wrong')) && (
           <p
             className={`text-lg font-semibold ${
