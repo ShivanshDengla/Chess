@@ -289,9 +289,12 @@ export function ChessPuzzle({
     onSuccess: () => void,
     retries = 10
   ): Promise<void> => {
+    console.log('[Polling] Starting payment confirmation polling.');
     return new Promise((resolve, reject) => {
       const poll = async (retriesLeft: number) => {
+        console.log(`[Polling] Retries left: ${retriesLeft}`);
         if (retriesLeft === 0) {
+          console.log('[Polling] Timeout.');
           setPopup({
             message: 'Payment confirmation timed out.',
             status: 'error',
@@ -301,6 +304,10 @@ export function ChessPuzzle({
         }
 
         try {
+          console.log('[Polling] Calling /api/confirm-payment with payload:', {
+            to,
+            payload,
+          });
           const confirmRes = await fetch(`/api/confirm-payment`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -308,23 +315,34 @@ export function ChessPuzzle({
           });
 
           if (!confirmRes.ok) {
+            console.error(
+              '[Polling] /api/confirm-payment request failed with status:',
+              confirmRes.status
+            );
             throw new Error('Payment confirmation request failed');
           }
 
           const payment = await confirmRes.json();
+          console.log('[Polling] Received payment status from API:', payment);
 
           if (payment.status === 'mined') {
+            console.log('[Polling] Payment confirmed (mined). Calling onSuccess.');
             onSuccess();
             return resolve();
           } else if (payment.status === 'pending') {
+            console.log('[Polling] Payment is pending, polling again in 2s.');
             setTimeout(() => poll(retriesLeft - 1), 2000);
           } else {
+            console.log(`[Polling] Payment failed with status: ${payment.status}.`);
             setPopup({ message: 'Payment failed.', status: 'error' });
             closePopupAfterDelay();
             return resolve();
           }
         } catch (error) {
-          console.error('An error occurred during payment confirmation:', error);
+          console.error(
+            '[Polling] An error occurred during payment confirmation polling:',
+            error
+          );
           setPopup({
             message: 'An unexpected error occurred.',
             status: 'error',
@@ -344,12 +362,17 @@ export function ChessPuzzle({
     type: PaymentStatus
   ) => {
     if (paymentStatus !== 'idle') return;
+    console.log(
+      `[Payment] Starting payment process for ${type}. Amount: ${amount}`
+    );
 
     try {
       setPaymentStatus(type);
       setPopup({ message: 'Initiating payment...', status: 'processing' });
+      console.log('[Payment] Calling /api/initiate-payment');
       const res = await fetch('/api/initiate-payment', { method: 'POST' });
       const { id } = await res.json();
+      console.log(`[Payment] Received reference ID: ${id}`);
 
       const payload: PayCommandInput = {
         reference: id,
@@ -369,16 +392,27 @@ export function ChessPuzzle({
         return;
       }
 
+      console.log(
+        '[Payment] Calling MiniKit.commandsAsync.pay with payload:',
+        payload
+      );
       const { finalPayload } = await MiniKit.commandsAsync.pay(payload);
+      console.log('[Payment] MiniKit response:', finalPayload);
 
       if (finalPayload.status == 'success') {
         setPopup({ message: 'Processing payment...', status: 'processing' });
+        console.log(
+          '[Payment] Payment submitted, starting polling for confirmation.'
+        );
         await pollForPaymentConfirmation(
           payload.to,
           finalPayload as MiniAppPaymentSuccessPayload,
           onSuccess
         );
       } else {
+        console.log(
+          `[Payment] Payment not successful. Status: ${finalPayload.status}`
+        );
         setPopup({ message: 'Payment was not completed.', status: 'error' });
         closePopupAfterDelay();
       }
@@ -387,6 +421,7 @@ export function ChessPuzzle({
       setPopup({ message: 'An unexpected error occurred.', status: 'error' });
       closePopupAfterDelay();
     } finally {
+      console.log(`[Payment] Finishing payment process for ${type}.`);
       setPaymentStatus('idle');
     }
   };
