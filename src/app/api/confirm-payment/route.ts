@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   const transaction = await response.json();
 
   // Defensive check for a valid transaction object
-  if (!transaction || typeof transaction.status === 'undefined') {
+  if (!transaction || typeof transaction.transactionStatus === 'undefined') {
     console.error(
       'Invalid transaction response from Worldcoin API. This might be due to an incorrect APP_ID or DEV_PORTAL_API_KEY. Please check your environment variables.',
       transaction
@@ -40,11 +40,11 @@ export async function POST(req: NextRequest) {
     transaction.recipientAddress.toLowerCase() === to.toLowerCase();
 
   if (transaction.reference === payload.reference && isToAddressMatch) {
-    if (transaction.status === 'mined') {
+    if (transaction.transactionStatus === 'mined') {
       return NextResponse.json({ success: true, status: 'mined' });
     } else if (
-      transaction.status === 'failed' ||
-      transaction.status === 'cancelled'
+      transaction.transactionStatus === 'failed' ||
+      transaction.transactionStatus === 'cancelled'
     ) {
       return NextResponse.json({ success: false, status: 'failed' });
     } else {

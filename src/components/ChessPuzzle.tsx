@@ -287,7 +287,7 @@ export function ChessPuzzle({
     to: string,
     payload: MiniAppPaymentSuccessPayload,
     onSuccess: () => void,
-    retries = 10
+    retries = 30
   ): Promise<void> => {
     console.log('[Polling] Starting payment confirmation polling.');
     return new Promise((resolve, reject) => {
@@ -330,8 +330,8 @@ export function ChessPuzzle({
             onSuccess();
             return resolve();
           } else if (payment.status === 'pending') {
-            console.log('[Polling] Payment is pending, polling again in 2s.');
-            setTimeout(() => poll(retriesLeft - 1), 2000);
+            console.log('[Polling] Payment is pending, polling again in 5s.');
+            setTimeout(() => poll(retriesLeft - 1), 5000);
           } else {
             console.log(`[Polling] Payment failed with status: ${payment.status}.`);
             setPopup({ message: 'Payment failed.', status: 'error' });
