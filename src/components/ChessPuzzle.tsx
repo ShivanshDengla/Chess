@@ -576,7 +576,7 @@ export function ChessPuzzle({
                 'Processing...'
               ) : (
                 <div className="flex flex-col items-center">
-                  <span>Show Answer</span>
+                  <span>Show Answerr</span>
                   <span className={styles.price}>0.25 WLD</span>
                 </div>
               )}
