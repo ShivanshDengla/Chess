@@ -47,8 +47,19 @@ const puzzleTypeSequence = [
 
 export function getPuzzleForLevel(
   level: number,
-  solvedPuzzleIds: number[] = []
+  solvedPuzzleIds: number[] = [],
+  currentPuzzleId?: string
 ): Puzzle | null {
+  if (currentPuzzleId) {
+    for (const levelKey in leveledPuzzles) {
+      const puzzle = leveledPuzzles[levelKey].find(
+        (p) => p.problemid.toString() === currentPuzzleId
+      );
+      if (puzzle) {
+        return puzzle;
+      }
+    }
+  }
   const puzzleType = puzzleTypeSequence[(level - 1) % puzzleTypeSequence.length];
   const puzzlesForType = leveledPuzzles[puzzleType];
 

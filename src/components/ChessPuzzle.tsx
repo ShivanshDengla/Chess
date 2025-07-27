@@ -23,7 +23,8 @@ type PopupStatus = 'processing' | 'success' | 'error';
 interface UserState {
   level: number;
   solvedPuzzleIds: number[];
-  isLost?: boolean;
+  isLost: boolean;
+  currentPuzzleId?: string;
 }
 
 export function ChessPuzzle({
@@ -35,6 +36,7 @@ export function ChessPuzzle({
     level: 1,
     solvedPuzzleIds: [],
     isLost: false,
+    currentPuzzleId: undefined,
   });
   const [currentPuzzle, setCurrentPuzzle] = useState<Puzzle | null>(null);
   const [game, setGame] = useState(new Chess());
@@ -75,7 +77,11 @@ export function ChessPuzzle({
   }, []);
 
   const loadPuzzleForLevel = useCallback(() => {
-    const puzzle = getPuzzleForLevel(userState.level, userState.solvedPuzzleIds);
+    const puzzle = getPuzzleForLevel(
+      userState.level,
+      userState.solvedPuzzleIds,
+      userState.currentPuzzleId
+    );
     if (puzzle) {
       setCurrentPuzzle(puzzle);
       const newGame = new Chess(puzzle.fen);
@@ -99,7 +105,7 @@ export function ChessPuzzle({
       setAllPuzzlesSolved(true);
       setPopup({ message: 'Congratulations!', status: 'success' });
     }
-  }, [userState.level, userState.solvedPuzzleIds, userState.isLost]);
+  }, [userState.level, userState.solvedPuzzleIds, userState.isLost, userState.currentPuzzleId]);
 
   useEffect(() => {
     loadPuzzleForLevel();
@@ -141,7 +147,11 @@ export function ChessPuzzle({
 
     setMessage('Wrong move.');
     setIsLost(true);
-    const newState = { ...userState, isLost: true };
+    const newState = {
+      ...userState,
+      isLost: true,
+      currentPuzzleId: currentPuzzle?.problemid.toString(),
+    };
     setUserStateClient(newState);
     localStorage.setItem('userState', JSON.stringify(newState));
     onMoveResult?.('incorrect');
@@ -255,6 +265,7 @@ export function ChessPuzzle({
       level: userState.level + 1,
       solvedPuzzleIds: [...userState.solvedPuzzleIds, currentPuzzle.problemid],
       isLost: false,
+      currentPuzzleId: undefined,
     };
 
     setUserStateClient(newState);
@@ -438,6 +449,7 @@ export function ChessPuzzle({
       level: 1,
       solvedPuzzleIds: userState.solvedPuzzleIds, // Keep solved history
       isLost: false,
+      currentPuzzleId: undefined,
     };
     setUserStateClient(newState);
     localStorage.setItem('userState', JSON.stringify(newState));
@@ -611,7 +623,7 @@ export function ChessPuzzle({
                 'Processing...'
               ) : (
                 <div className="flex flex-col items-center">
-                  <span>Show Answerr</span>
+                  <span>Show Answer</span>
                   <span className={styles.price}>0.25 WLD</span>
                 </div>
               )}
