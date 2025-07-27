@@ -60,6 +60,8 @@ export function ChessPuzzle({
   );
   const { width } = useWindowSize();
   const [backgroundFlash, setBackgroundFlash] = useState('');
+  const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
+  const [isComputerThinking, setIsComputerThinking] = useState(false);
 
   useEffect(() => {
     MiniKit.install();
@@ -88,6 +90,7 @@ export function ChessPuzzle({
       setGame(newGame);
       setFen(newGame.fen());
       setIsSolved(false);
+      setCurrentMoveIndex(0);
 
       if (userState.isLost) {
         setMessage('Wrong move.');
@@ -120,9 +123,10 @@ export function ChessPuzzle({
     to: Square,
     promotion?: PromotionPiece
   ): boolean => {
-    if (isSolved || isLost || !currentPuzzle) return false;
+    if (isSolved || isLost || !currentPuzzle || isComputerThinking) return false;
 
-    const solution = currentPuzzle.moves.split(';')[0].split('-');
+    const allMoves = currentPuzzle.moves.split(';');
+    const solution = allMoves[currentMoveIndex].split('-');
     const solutionFrom = solution[0];
     const solutionTo = solution[1];
 
@@ -137,11 +141,45 @@ export function ChessPuzzle({
       setGame(gameCopy);
       setFen(gameCopy.fen());
       setMessage('Correct!');
-      setIsSolved(true);
       onMoveResult?.('correct');
-      setTimeout(() => {
-        handleCorrectMove();
-      }, 1500);
+
+      const newMoveIndex = currentMoveIndex + 1;
+
+      if (newMoveIndex >= allMoves.length) {
+        setIsSolved(true);
+        setTimeout(() => {
+          handleCorrectMove();
+        }, 1500);
+      } else {
+        setCurrentMoveIndex(newMoveIndex);
+        setIsComputerThinking(true);
+        setTimeout(() => {
+          const computerMoveString = allMoves[newMoveIndex].split('-');
+          const computerFrom = computerMoveString[0];
+          const computerTo = computerMoveString[1];
+
+          const gameCopyAfterComputerMove = new Chess(gameCopy.fen());
+          gameCopyAfterComputerMove.move({ from: computerFrom, to: computerTo });
+
+          setGame(gameCopyAfterComputerMove);
+          setFen(gameCopyAfterComputerMove.fen());
+
+          const finalMoveIndex = newMoveIndex + 1;
+          if (finalMoveIndex >= allMoves.length) {
+            setMessage('Mate!');
+            setIsSolved(true);
+            setTimeout(() => {
+              handleCorrectMove();
+            }, 1500);
+          } else {
+            setCurrentMoveIndex(finalMoveIndex);
+            if (currentPuzzle) {
+              setMessage(currentPuzzle.first);
+            }
+          }
+          setIsComputerThinking(false);
+        }, 500);
+      }
       return true;
     }
 
@@ -159,6 +197,7 @@ export function ChessPuzzle({
   };
 
   const onDrop = (sourceSquare: Square, targetSquare: Square): boolean => {
+    if (isComputerThinking) return false;
     const piece = game.get(sourceSquare);
 
     if (
@@ -180,11 +219,12 @@ export function ChessPuzzle({
     sourceSquare: Square,
     targetSquare: Square
   ): boolean => {
+    if (isComputerThinking) return false;
     return onDrop(sourceSquare, targetSquare);
   };
 
   const onSquareClick = (square: Square) => {
-    if (isSolved || isLost) {
+    if (isSolved || isLost || isComputerThinking) {
       return;
     }
 
@@ -214,8 +254,22 @@ export function ChessPuzzle({
       return;
     }
 
-    const piece = game.get(square);
-    if (piece && piece.color === game.turn()) {
+    const piece = game.get(moveFrom as Square);
+    if (
+      piece?.type === 'p' &&
+      ((piece.color === 'w' && square.endsWith('8')) ||
+        (piece.color === 'b' && square.endsWith('1')))
+    ) {
+      const moves = game.moves({ square: moveFrom as Square, verbose: true });
+      if (moves.some((m) => m.to === square)) {
+        setPromotionMove({ from: moveFrom as Square, to: square });
+        resetMoveState();
+        return;
+      }
+    }
+
+    const pieceOnTarget = game.get(square);
+    if (pieceOnTarget && pieceOnTarget.color === game.turn()) {
       const moves = game.moves({ square, verbose: true });
       setMoveFrom(square);
       const newOptions: { [key: string]: React.CSSProperties } = {};
@@ -229,24 +283,7 @@ export function ChessPuzzle({
       return;
     }
 
-    const moveResult = onDrop(moveFrom as Square, square);
-    if (!moveResult && !promotionMove) {
-      const piece = game.get(square);
-      if (piece && piece.color === game.turn()) {
-        const moves = game.moves({ square, verbose: true });
-        setMoveFrom(square);
-        const newOptions: { [key: string]: React.CSSProperties } = {};
-        moves.forEach((move) => {
-          newOptions[move.to] = {
-            background:
-              'radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)',
-            borderRadius: '50%',
-          };
-        });
-        setOptionSquares(newOptions);
-        return;
-      }
-    }
+    onDrop(moveFrom as Square, square);
 
     resetMoveState();
   };
@@ -288,6 +325,7 @@ export function ChessPuzzle({
       setIsShowingAnswer(false);
       setPromotionMove(null);
       setBackgroundFlash('');
+      setCurrentMoveIndex(0);
       const newState = { ...userState, isLost: false };
       setUserStateClient(newState);
       localStorage.setItem('userState', JSON.stringify(newState));
