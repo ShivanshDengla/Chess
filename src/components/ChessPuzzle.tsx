@@ -526,7 +526,9 @@ export function ChessPuzzle({
 
   const handleShowHint = async () => {
     if (!currentPuzzle) return;
-    const solutionFrom = currentPuzzle.moves.split(';')[0].split('-')[0] as Square;
+    const allMoves = currentPuzzle.moves.split(';');
+    if (currentMoveIndex >= allMoves.length) return; // No more moves
+    const solutionFrom = allMoves[currentMoveIndex].split('-')[0] as Square;
     handlePayment(
       0.1,
       'Payment for a hint',
@@ -541,7 +543,11 @@ export function ChessPuzzle({
 
   const handleShowAnswer = async () => {
     if (!currentPuzzle) return;
-    const [from, to] = currentPuzzle.moves.split(';')[0].split('-') as [Square, Square];
+    const allMoves = currentPuzzle.moves.split(';');
+    if (currentMoveIndex >= allMoves.length) return; // No more moves
+    const [fromPart, toPart] = allMoves[currentMoveIndex].split('-');
+    const from = fromPart as Square;
+    const to = toPart.slice(0, 2) as Square; // Handle possible promotion info
     handlePayment(
       0.25,
       'Payment for the answer',
