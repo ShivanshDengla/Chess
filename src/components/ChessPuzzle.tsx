@@ -603,25 +603,28 @@ export function ChessPuzzle({
           onSquareClick={onSquareClick}
           customSquareStyles={getCustomSquareStyles()}
           customArrows={customArrows}
-          promotionDialogVariant="vertical"
-          onPromotionPieceSelect={(piece) => {
-            if (promotionMove && piece) {
-              // `piece` from onPromotionPieceSelect is already one of 'q', 'r', 'b', 'n'.
-              // Pass it directly to the handleMove instead of extracting charAt(1),
-              // which previously resulted in an empty string and prevented promotions.
-              handleMove(
-                promotionMove.from,
-                promotionMove.to,
-                piece.toLowerCase() as PromotionPiece
-              );
-              setPromotionMove(null);
-              return true;
-            }
-            return false;
-          }}
-          promotionToSquare={promotionMove?.to ?? null}
         />
       </div>
+
+      {/* Custom promotion overlay (works for both drag-and-drop and click-to-move) */}
+      {promotionMove && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="grid grid-cols-4 gap-3 rounded bg-white p-4 shadow-lg">
+            {(['q', 'r', 'b', 'n'] as PromotionPiece[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => {
+                  handleMove(promotionMove.from, promotionMove.to, p);
+                  setPromotionMove(null);
+                }}
+                className="h-12 w-12 select-none text-xl font-bold hover:bg-gray-200"
+              >
+                {p.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex h-24 items-center justify-center">
         <div
