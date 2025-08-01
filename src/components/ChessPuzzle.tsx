@@ -51,6 +51,7 @@ export function ChessPuzzle({
   const [promotionMove, setPromotionMove] = useState<{
     from: Square;
     to: Square;
+    color: 'w' | 'b';
   } | null>(null);
   const [hintSquare, setHintSquare] = useState<Square | null>(null);
   const [answerMove, setAnswerMove] = useState<{ from: Square; to: Square } | null>(null);
@@ -126,9 +127,14 @@ export function ChessPuzzle({
     if (isSolved || isLost || !currentPuzzle || isComputerThinking) return false;
 
     const allMoves = currentPuzzle.moves.split(';');
-    const solution = allMoves[currentMoveIndex].split('-');
-    const solutionFrom = solution[0];
-    const solutionTo = solution[1];
+    const solutionParts = allMoves[currentMoveIndex].split('-');
+    const solutionFrom = solutionParts[0];
+    const solutionToSegment = solutionParts[1];
+    const solutionTo = solutionToSegment.slice(0, 2); // e.g. f8 from f8q
+    const solutionPromotion =
+      solutionToSegment.length > 2
+        ? (solutionToSegment[2].toLowerCase() as PromotionPiece)
+        : undefined;
 
     const gameCopy = new Chess(game.fen());
     const move = gameCopy.move({ from, to, promotion });
@@ -137,7 +143,10 @@ export function ChessPuzzle({
       return false;
     }
 
-    if (from === solutionFrom && to === solutionTo) {
+    const moveMatches = from === solutionFrom && to === solutionTo;
+    const promotionMatches = solutionPromotion ? promotion === solutionPromotion : true;
+
+    if (moveMatches && promotionMatches) {
       setGame(gameCopy);
       setFen(gameCopy.fen());
       setMessage('Correct!');
@@ -156,10 +165,19 @@ export function ChessPuzzle({
         setTimeout(() => {
           const computerMoveString = allMoves[newMoveIndex].split('-');
           const computerFrom = computerMoveString[0];
-          const computerTo = computerMoveString[1];
+          const computerToSegment = computerMoveString[1];
+          const computerTo = computerToSegment.slice(0, 2);
+          const computerPromotion =
+            computerToSegment.length > 2
+              ? (computerToSegment[2].toLowerCase() as PromotionPiece)
+              : undefined;
 
           const gameCopyAfterComputerMove = new Chess(gameCopy.fen());
-          gameCopyAfterComputerMove.move({ from: computerFrom, to: computerTo });
+          gameCopyAfterComputerMove.move({
+            from: computerFrom,
+            to: computerTo,
+            promotion: computerPromotion,
+          });
 
           setGame(gameCopyAfterComputerMove);
           setFen(gameCopyAfterComputerMove.fen());
@@ -207,7 +225,7 @@ export function ChessPuzzle({
     ) {
       const moves = game.moves({ square: sourceSquare, verbose: true });
       if (moves.some((m) => m.to === targetSquare)) {
-        setPromotionMove({ from: sourceSquare, to: targetSquare });
+        setPromotionMove({ from: sourceSquare, to: targetSquare, color: piece.color });
         return false;
       }
     }
@@ -262,7 +280,7 @@ export function ChessPuzzle({
     ) {
       const moves = game.moves({ square: moveFrom as Square, verbose: true });
       if (moves.some((m) => m.to === square)) {
-        setPromotionMove({ from: moveFrom as Square, to: square });
+        setPromotionMove({ from: moveFrom as Square, to: square, color: piece.color });
         resetMoveState();
         return;
       }
@@ -609,19 +627,25 @@ export function ChessPuzzle({
       {/* Custom promotion overlay (works for both drag-and-drop and click-to-move) */}
       {promotionMove && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="grid grid-cols-4 gap-3 rounded bg-white p-4 shadow-lg">
-            {(['q', 'r', 'b', 'n'] as PromotionPiece[]).map((p) => (
-              <button
-                key={p}
-                onClick={() => {
-                  handleMove(promotionMove.from, promotionMove.to, p);
-                  setPromotionMove(null);
-                }}
-                className="h-12 w-12 select-none text-xl font-bold hover:bg-gray-200"
-              >
-                {p.toUpperCase()}
-              </button>
-            ))}
+          <div className="grid grid-cols-2 gap-2 rounded bg-[#333] p-2 shadow-lg">
+            {(['q', 'r', 'b', 'n'] as PromotionPiece[]).map((p, idx) => {
+              const bgColor = idx % 2 === 0 ? '#f0d9b5' : '#b58863';
+              const colorPrefix = promotionMove.color === 'w' ? 'w' : 'b';
+              const imgSrc = `https://chessboardjs.com/img/chesspieces/wikipedia/${colorPrefix}${p.toUpperCase()}.png`;
+              return (
+                <button
+                  key={p}
+                  onClick={() => {
+                    handleMove(promotionMove.from, promotionMove.to, p);
+                    setPromotionMove(null);
+                  }}
+                  style={{ backgroundColor: bgColor }}
+                  className="flex h-16 w-16 items-center justify-center rounded hover:brightness-110"
+                >
+                  <img src={imgSrc} alt={p} className="pointer-events-none h-10 w-10" />
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
