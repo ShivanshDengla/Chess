@@ -606,10 +606,13 @@ export function ChessPuzzle({
           promotionDialogVariant="vertical"
           onPromotionPieceSelect={(piece) => {
             if (promotionMove && piece) {
+              // `piece` from onPromotionPieceSelect is already one of 'q', 'r', 'b', 'n'.
+              // Pass it directly to the handleMove instead of extracting charAt(1),
+              // which previously resulted in an empty string and prevented promotions.
               handleMove(
                 promotionMove.from,
                 promotionMove.to,
-                piece.toLowerCase().charAt(1) as PromotionPiece
+                piece.toLowerCase() as PromotionPiece
               );
               setPromotionMove(null);
               return true;
